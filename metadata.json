@@ -1,0 +1,7 @@
+{
+  "name": "Grocery Snap",
+  "description": "Manage grocery bills, track inventory, plan meals, and reduce waste with gamification.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
