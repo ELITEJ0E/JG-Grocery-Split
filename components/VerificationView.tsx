@@ -109,7 +109,7 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
               <div>
                 <label className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1 block">Price</label>
                 <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></span>
                   <input
                     type="number"
                     value={item.unitPrice || ''}

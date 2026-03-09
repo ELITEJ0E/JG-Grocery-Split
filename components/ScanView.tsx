@@ -106,88 +106,88 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Add Groceries</h1>
-        <button onClick={onCancel} className="p-2 bg-gray-200 rounded-full text-gray-600 hover:bg-gray-300 transition-colors">
-          <X size={20} />
-        </button>
+    <div className="flex flex-col h-full bg-gray-50 pb-24">
+      <div className="p-6 pb-2">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Add Groceries</h1>
+        <p className="text-gray-500 text-sm mb-4">Choose how you want to add items to your inventory.</p>
       </div>
 
-      {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm font-medium border border-red-100">
-          {error}
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        {error && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm font-medium border border-red-100">
+            {error}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-4 max-w-xs mx-auto w-full pb-8">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActiveScanner('camera')}
+            className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 group hover:border-emerald-200 transition-colors w-full"
+          >
+            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+              <Camera size={28} className="text-emerald-600" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-bold text-gray-900 text-lg mb-1">Scan Receipt</h3>
+              <p className="text-sm text-gray-500">Take a photo of your bill</p>
+            </div>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActiveScanner('barcode')}
+            className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 group hover:border-blue-200 transition-colors w-full"
+          >
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors flex-shrink-0">
+              <Barcode size={28} className="text-blue-600" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-bold text-gray-900 text-lg mb-1">Scan Barcode</h3>
+              <p className="text-sm text-gray-500">Scan a product barcode</p>
+            </div>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 group hover:border-purple-200 transition-colors w-full"
+          >
+            <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center group-hover:bg-purple-100 transition-colors flex-shrink-0">
+              <Upload size={28} className="text-purple-600" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-bold text-gray-900 text-lg mb-1">Upload Receipt</h3>
+              <p className="text-sm text-gray-500">Select an image from gallery</p>
+            </div>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleManualEntry}
+            className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 group hover:border-orange-200 transition-colors w-full"
+          >
+            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center group-hover:bg-orange-100 transition-colors flex-shrink-0">
+              <Edit3 size={28} className="text-orange-600" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-bold text-gray-900 text-lg mb-1">Manual Entry</h3>
+              <p className="text-sm text-gray-500">Type in your items manually</p>
+            </div>
+          </motion.button>
+
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+          />
         </div>
-      )}
-
-      <div className="flex-1 flex flex-col justify-center gap-4 max-w-xs mx-auto w-full">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setActiveScanner('camera')}
-          className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 group hover:border-emerald-200 transition-colors w-full"
-        >
-          <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center group-hover:bg-emerald-100 transition-colors flex-shrink-0">
-            <Camera size={28} className="text-emerald-600" />
-          </div>
-          <div className="text-left">
-            <h3 className="font-bold text-gray-900 text-lg mb-1">Scan Receipt</h3>
-            <p className="text-sm text-gray-500">Take a photo of your bill</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setActiveScanner('barcode')}
-          className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 group hover:border-blue-200 transition-colors w-full"
-        >
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors flex-shrink-0">
-            <Barcode size={28} className="text-blue-600" />
-          </div>
-          <div className="text-left">
-            <h3 className="font-bold text-gray-900 text-lg mb-1">Scan Barcode</h3>
-            <p className="text-sm text-gray-500">Scan a product barcode</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 group hover:border-purple-200 transition-colors w-full"
-        >
-          <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center group-hover:bg-purple-100 transition-colors flex-shrink-0">
-            <Upload size={28} className="text-purple-600" />
-          </div>
-          <div className="text-left">
-            <h3 className="font-bold text-gray-900 text-lg mb-1">Upload Receipt</h3>
-            <p className="text-sm text-gray-500">Select an image from gallery</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleManualEntry}
-          className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 group hover:border-orange-200 transition-colors w-full"
-        >
-          <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center group-hover:bg-orange-100 transition-colors flex-shrink-0">
-            <Edit3 size={28} className="text-orange-600" />
-          </div>
-          <div className="text-left">
-            <h3 className="font-bold text-gray-900 text-lg mb-1">Manual Entry</h3>
-            <p className="text-sm text-gray-500">Type in your items manually</p>
-          </div>
-        </motion.button>
-
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          className="hidden"
-        />
       </div>
     </div>
   );
