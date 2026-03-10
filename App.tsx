@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppState, InventoryItem, Recipe, MealPlan, ShoppingListItem } from './types';
 import BottomNav from './components/BottomNav';
@@ -8,10 +7,11 @@ import AnalyticsView from './components/AnalyticsView';
 import ShoppingListView from './components/ShoppingListView';
 import ScanView from './components/ScanView';
 import VerificationView from './components/VerificationView';
+import KitchenDashboardView from './components/KitchenDashboardView';
 import { addDays } from 'date-fns';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<AppState>('inventory');
+  const [view, setView] = useState<AppState>('kitchen');
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
@@ -19,7 +19,6 @@ const App: React.FC = () => {
   const [scannedItems, setScannedItems] = useState<Partial<InventoryItem>[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // Load from local storage on mount
   useEffect(() => {
     const storedInventory = localStorage.getItem('grocery_inventory');
     const storedRecipes = localStorage.getItem('userRecipes');
@@ -32,7 +31,6 @@ const App: React.FC = () => {
     if (storedShoppingList) setShoppingList(JSON.parse(storedShoppingList));
   }, []);
 
-  // Save to local storage on change
   useEffect(() => {
     localStorage.setItem('grocery_inventory', JSON.stringify(inventory));
     localStorage.setItem('userRecipes', JSON.stringify(recipes));
@@ -58,7 +56,6 @@ const App: React.FC = () => {
 
   const handleDeleteRecipe = (id: string) => {
     setRecipes(recipes.filter(r => r.id !== id));
-    // Also remove meal plans associated with this recipe
     setMealPlans(mealPlans.filter(mp => mp.recipeId !== id));
   };
 
@@ -83,7 +80,7 @@ const App: React.FC = () => {
     setInventory([...inventory, ...items]);
     setIsVerifying(false);
     setScannedItems([]);
-    setView('inventory');
+    setView('kitchen');
   };
 
   const handleQuickAddInventory = (item: Partial<InventoryItem>) => {
@@ -118,42 +115,68 @@ const App: React.FC = () => {
     }
 
     switch (view) {
+      case 'kitchen':
+        return (
+          <KitchenDashboardView
+            items={inventory}
+            recipes={recipes}
+            mealPlans={mealPlans}
+            onUpdateItem={handleUpdateItem}
+            onDeleteItem={handleDeleteItem}
+            onNavigate={setView}
+          />
+        );
       case 'inventory':
         return <InventoryView items={inventory} mealPlans={mealPlans} recipes={recipes} onUpdateItem={handleUpdateItem} onDeleteItem={handleDeleteItem} />;
       case 'planner':
-        return <MealPlannerView 
-          recipes={recipes} 
-          mealPlans={mealPlans} 
-          inventory={inventory} 
-          onAddRecipe={handleAddRecipe} 
-          onUpdateRecipe={handleUpdateRecipe}
-          onDeleteRecipe={handleDeleteRecipe}
-          onAddMealPlan={handleAddMealPlan}
-          onUpdateMealPlan={handleUpdateMealPlan}
-          onDeleteMealPlan={handleDeleteMealPlan}
-          onUpdateInventory={setInventory}
-        />;
+        return (
+          <MealPlannerView
+            recipes={recipes}
+            mealPlans={mealPlans}
+            inventory={inventory}
+            onAddRecipe={handleAddRecipe}
+            onUpdateRecipe={handleUpdateRecipe}
+            onDeleteRecipe={handleDeleteRecipe}
+            onAddMealPlan={handleAddMealPlan}
+            onUpdateMealPlan={handleUpdateMealPlan}
+            onDeleteMealPlan={handleDeleteMealPlan}
+            onUpdateInventory={setInventory}
+          />
+        );
       case 'scan':
-        return <ScanView onItemsExtracted={handleItemsExtracted} onCancel={() => setView('inventory')} />;
+        return <ScanView onItemsExtracted={handleItemsExtracted} onCancel={() => setView('kitchen')} />;
       case 'analytics':
         return <AnalyticsView inventory={inventory} />;
       case 'shoppingList':
-        return <ShoppingListView 
-          inventory={inventory}
-          recipes={recipes}
-          mealPlans={mealPlans}
-          shoppingList={shoppingList}
-          onUpdateShoppingList={setShoppingList}
-          onAddToInventory={handleQuickAddInventory}
-          onNavigateToScan={() => setView('scan')}
-        />;
+        return (
+          <ShoppingListView
+            inventory={inventory}
+            recipes={recipes}
+            mealPlans={mealPlans}
+            shoppingList={shoppingList}
+            onUpdateShoppingList={setShoppingList}
+            onAddToInventory={handleQuickAddInventory}
+            onNavigateToScan={() => setView('scan')}
+          />
+        );
       default:
-        return <InventoryView items={inventory} mealPlans={mealPlans} recipes={recipes} onUpdateItem={handleUpdateItem} onDeleteItem={handleDeleteItem} />;
+        return (
+          <KitchenDashboardView
+            items={inventory}
+            recipes={recipes}
+            mealPlans={mealPlans}
+            onUpdateItem={handleUpdateItem}
+            onDeleteItem={handleDeleteItem}
+            onNavigate={setView}
+          />
+        );
     }
   };
 
   return (
-    <div className="max-w-md mx-auto bg-gradient-to-br from-[#F0FDF4] to-[#ECFEFF] min-h-screen shadow-2xl overflow-hidden relative font-sans text-[#1E293B]">
+    <div className="max-w-md mx-auto min-h-screen shadow-2xl overflow-hidden relative font-sans text-[#1E293B]"
+      style={{ background: 'linear-gradient(160deg, #f0fdf4 0%, #e0f7fa 50%, #ecfeff 100%)' }}
+    >
       {renderContent()}
       {!isVerifying && <BottomNav currentView={view} onNavigate={setView} />}
     </div>

@@ -9,7 +9,6 @@ interface AnalyticsViewProps {
   inventory: InventoryItem[];
 }
 
-// Fresh, cute color palette
 const COLORS = ['#4ADE80', '#38BDF8', '#2DD4BF', '#FBBF24', '#F472B6', '#A78BFA', '#94A3B8'];
 
 const CURRENCIES = [
@@ -46,8 +45,8 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
   };
 
   return (
-    <div className="flex flex-col h-full pb-24 relative">
-      <div className="bg-white/60 backdrop-blur-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl flex justify-between items-center">
+    <div className="flex flex-col h-full pb-28 relative">
+      <div className="bg-white/60 backdrop-blur-xl px-6 pt-8 pb-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl flex justify-between items-center">
         <h1 className="text-3xl font-extrabold text-[#1E293B] tracking-tight">Stats 📊</h1>
         <div className="relative">
           <select
@@ -68,7 +67,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -141,7 +140,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
                       contentStyle={{ 
                         borderRadius: '16px', 
                         border: 'none', 
-                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
                         fontWeight: 'bold',
                         padding: '12px'
                       }}
@@ -149,7 +148,6 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                {/* Center text for donut chart */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Total</span>
                   <span className="text-slate-800 font-black text-xl">{formatCurrency(totalSpent)}</span>

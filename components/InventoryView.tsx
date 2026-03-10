@@ -41,8 +41,8 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
   };
 
   return (
-    <div className="flex flex-col h-full pb-24 relative">
-      <div className="bg-white/60 backdrop-blur-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl">
+    <div className="flex flex-col h-full pb-28 relative">
+      <div className="bg-white/60 backdrop-blur-xl px-6 pt-8 pb-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl">
         <h1 className="text-3xl font-extrabold text-[#1E293B] mb-5 tracking-tight">My Pantry 📦</h1>
         
         <div className="relative mb-5">
@@ -86,7 +86,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 px-6 py-8 overflow-y-auto">
         {expiringSoonItems.length > 0 && filterCategory === 'all' && search === '' && (
           <div className="mb-8">
             <h2 className="text-sm font-bold text-amber-500 uppercase tracking-wider mb-4 flex items-center gap-2">
