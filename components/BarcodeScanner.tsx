@@ -38,21 +38,28 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onCancel }) => 
   }, [onScan]);
 
   return (
-    <div className="flex flex-col h-full bg-black text-white p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Scan Barcode</h2>
-        <button onClick={onCancel} className="p-2 bg-white/20 rounded-full hover:bg-white/30">
-          <X size={20} />
+    <div className="flex flex-col h-full bg-slate-900 text-white p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-extrabold tracking-tight">Scan Barcode 🏷️</h2>
+        <button onClick={onCancel} className="p-2.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors backdrop-blur-md">
+          <X size={20} strokeWidth={3} />
         </button>
       </div>
       
-      {error && <div className="bg-red-500/20 text-red-200 p-3 rounded-xl mb-4 text-sm">{error}</div>}
+      {error && <div className="bg-rose-500/20 text-rose-200 p-4 rounded-2xl mb-6 text-sm font-bold border border-rose-500/30">{error}</div>}
       
       <div className="flex-1 flex flex-col items-center justify-center">
-        <div id="reader" className="w-full max-w-sm rounded-2xl overflow-hidden bg-white/5"></div>
-        <p className="mt-6 text-gray-400 text-sm text-center">
-          Position the barcode inside the frame to scan.
-        </p>
+        <div className="relative w-full max-w-sm">
+          <div id="reader" className="w-full rounded-[2rem] overflow-hidden bg-slate-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-slate-700"></div>
+          {/* Decorative elements */}
+          <div className="absolute -top-4 -left-4 w-20 h-20 bg-[#38BDF8]/20 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-[#4ADE80]/20 rounded-full blur-2xl pointer-events-none"></div>
+        </div>
+        <div className="mt-8 bg-slate-800/50 px-6 py-3 rounded-2xl backdrop-blur-md border border-slate-700">
+          <p className="text-slate-300 text-sm font-medium text-center">
+            Position the barcode inside the frame to scan.
+          </p>
+        </div>
       </div>
     </div>
   );

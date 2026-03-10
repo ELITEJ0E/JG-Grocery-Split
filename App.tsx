@@ -153,7 +153,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl overflow-hidden relative font-sans">
+    <div className="max-w-md mx-auto bg-gradient-to-br from-[#F0FDF4] to-[#ECFEFF] min-h-screen shadow-2xl overflow-hidden relative font-sans text-[#1E293B]">
       {renderContent()}
       {!isVerifying && <BottomNav currentView={view} onNavigate={setView} />}
     </div>

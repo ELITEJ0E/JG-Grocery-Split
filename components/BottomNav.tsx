@@ -1,7 +1,8 @@
 import React from 'react';
-import { Camera, List, Calendar, BarChart2, ShoppingCart } from 'lucide-react';
+import { Camera, Package, Utensils, ShoppingCart, BarChart2 } from 'lucide-react';
 import { AppState } from '../types';
 import { clsx } from 'clsx';
+import { motion } from 'motion/react';
 
 interface BottomNavProps {
   currentView: AppState;
@@ -10,43 +11,46 @@ interface BottomNavProps {
 
 const BottomNav: React.FC<BottomNavProps> = ({ currentView, onNavigate }) => {
   const navItems: { id: AppState; label: string; icon: React.ReactNode }[] = [
-    { id: 'inventory', label: 'Inventory', icon: <List size={24} /> },
-    { id: 'planner', label: 'Planner', icon: <Calendar size={24} /> },
-    { id: 'scan', label: 'Scan', icon: <Camera size={24} /> },
-    { id: 'shoppingList', label: 'Shop', icon: <ShoppingCart size={24} /> },
-    { id: 'analytics', label: 'Analytics', icon: <BarChart2 size={24} /> },
+    { id: 'scan', label: 'Scan', icon: <Camera size={22} /> },
+    { id: 'inventory', label: 'Inventory', icon: <Package size={22} /> },
+    { id: 'planner', label: 'Recipes', icon: <Utensils size={22} /> },
+    { id: 'shoppingList', label: 'Shop', icon: <ShoppingCart size={22} /> },
+    { id: 'analytics', label: 'Stats', icon: <BarChart2 size={22} /> },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-2 z-50">
-      <div className="flex justify-around items-center h-16 max-w-md mx-auto px-2">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 pb-safe z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+      <div className="flex justify-around items-center h-20 max-w-md mx-auto px-2">
         {navItems.map((item) => {
           const isActive = currentView === item.id;
-          const isScan = item.id === 'scan';
           
           return (
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={clsx(
-                "flex flex-col items-center justify-center w-16 h-full transition-colors",
-                isActive ? "text-emerald-600" : "text-gray-400 hover:text-gray-600",
-                isScan && "relative -top-4"
+                "relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300",
+                isActive ? "text-white" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
               )}
             >
-              {isScan ? (
-                <div className={clsx(
-                  "p-4 rounded-full shadow-lg text-white transition-transform active:scale-95",
-                  isActive ? "bg-emerald-600" : "bg-emerald-500"
-                )}>
-                  {item.icon}
-                </div>
-              ) : (
-                <>
-                  {item.icon}
-                  <span className="text-[10px] mt-1 font-medium">{item.label}</span>
-                </>
+              {isActive && (
+                <motion.div
+                  layoutId="bottomNavActive"
+                  className="absolute inset-0 bg-gradient-to-br from-[#4ADE80] to-[#38BDF8] rounded-2xl shadow-md"
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                />
               )}
+              <div className="relative z-10 flex flex-col items-center gap-1">
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  animate={{ y: isActive ? -2 : 0 }}
+                >
+                  {item.icon}
+                </motion.div>
+                <span className={clsx("text-[10px] font-semibold tracking-wide", isActive ? "text-white" : "text-slate-500")}>
+                  {item.label}
+                </span>
+              </div>
             </button>
           );
         })}

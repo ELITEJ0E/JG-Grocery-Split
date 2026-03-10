@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { InventoryItem, Recipe, MealPlan, ShoppingListItem, Category } from '../types';
-import { Plus, Search, Trash2, CheckCircle2, Circle, Download, Upload, AlertCircle, ChevronDown, PackagePlus, Camera } from 'lucide-react';
+import { Plus, Search, Trash2, CheckCircle2, Circle, Download, Upload, AlertCircle, ChevronDown, PackagePlus, Camera, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 import { differenceInDays } from 'date-fns';
+import { getCategoryEmoji } from '../utils';
 
 interface ShoppingListViewProps {
   inventory: InventoryItem[];
@@ -230,70 +231,71 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   }, {} as Record<Category, ShoppingListItem[]>);
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 pb-24">
+    <div className="flex flex-col h-full pb-24 relative">
       {/* Header & Search */}
-      <div className="bg-white p-4 shadow-sm z-10 sticky top-0">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Shopping List</h1>
-          <div className="flex gap-2">
-            <button onClick={() => setShowAddForm(!showAddForm)} className="p-2 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors">
-              <Plus size={20} />
-            </button>
-          </div>
+      <div className="bg-white/60 backdrop-blur-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl">
+        <div className="flex justify-between items-center mb-5">
+          <h1 className="text-3xl font-extrabold text-[#1E293B] tracking-tight">Shopping 🛒</h1>
+          <button 
+            onClick={() => setShowAddForm(!showAddForm)} 
+            className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-[#4ADE80] to-[#38BDF8] text-white rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95"
+          >
+            <Plus size={24} />
+          </button>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input
             type="text"
             placeholder="Search items..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-100 border-transparent rounded-xl pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+            className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-100 shadow-sm rounded-2xl focus:bg-white focus:border-[#38BDF8] focus:ring-4 focus:ring-[#38BDF8]/10 transition-all outline-none text-slate-700 font-medium placeholder:text-slate-400"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* Add Item Form */}
         <AnimatePresence>
           {showAddForm && (
             <motion.form
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.95 }}
               onSubmit={handleAddItem}
-              className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+              className="bg-white p-5 rounded-3xl shadow-md border border-slate-100 overflow-hidden"
             >
-              <h3 className="font-bold text-gray-900 mb-3">Add New Item</h3>
-              <div className="space-y-3">
+              <h3 className="font-bold text-slate-800 mb-4 text-lg">Add New Item</h3>
+              <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="Item name"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20 outline-none transition-all"
                   required
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <input
                     type="text"
-                    placeholder="Qty (e.g., 1L, 2)"
+                    placeholder="Qty"
                     value={newItemQuantity}
                     onChange={(e) => setNewItemQuantity(e.target.value)}
-                    className="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                    className="w-1/3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20 outline-none transition-all"
                   />
                   <select
                     value={newItemCategory}
                     onChange={(e) => setNewItemCategory(e.target.value as Category)}
-                    className="w-2/3 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none capitalize"
+                    className="w-2/3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20 outline-none transition-all capitalize"
                   >
                     {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
+                      <option key={cat} value={cat}>{getCategoryEmoji(cat)} {cat}</option>
                     ))}
                   </select>
                 </div>
-                <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2 rounded-xl hover:bg-emerald-700 transition-colors">
+                <button type="submit" className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95">
                   Add to List
                 </button>
               </div>
@@ -304,22 +306,28 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         {/* Suggested Restocks */}
         {suggestions.length > 0 && !searchQuery && (
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <AlertCircle size={18} className="text-orange-500" />
-              <h2 className="font-bold text-gray-900">Suggested Restocks</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <AlertCircle size={20} className="text-amber-500" />
+              <h2 className="font-bold text-slate-800 text-lg">Suggested Restocks</h2>
             </div>
-            <div className="flex overflow-x-auto pb-2 gap-3 snap-x">
+            <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar">
               {suggestions.map((sug, idx) => (
-                <div key={idx} className="flex-shrink-0 w-48 bg-orange-50 border border-orange-100 p-3 rounded-2xl snap-start">
-                  <p className="font-bold text-gray-900 capitalize truncate">{sug.name}</p>
-                  <p className="text-xs text-orange-600 mb-2">Need: {sug.quantity}</p>
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  key={idx} 
+                  className="flex-shrink-0 w-48 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/50 p-4 rounded-3xl snap-start shadow-sm"
+                >
+                  <div className="text-2xl mb-2">{getCategoryEmoji(sug.category)}</div>
+                  <p className="font-bold text-slate-800 capitalize truncate text-lg">{sug.name}</p>
+                  <p className="text-sm font-medium text-amber-600 mb-3">Need: {sug.quantity}</p>
                   <button 
                     onClick={() => handleAddSuggestion(sug)}
-                    className="w-full bg-white text-orange-600 border border-orange-200 text-xs font-bold py-1.5 rounded-lg hover:bg-orange-100 transition-colors"
+                    className="w-full bg-white text-amber-600 border border-amber-200 text-sm font-bold py-2 rounded-xl hover:bg-amber-50 transition-colors shadow-sm"
                   >
-                    + Add to List
+                    + Add
                   </button>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -327,38 +335,46 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
         {/* Active Shopping List */}
         <div>
-          <h2 className="font-bold text-gray-900 mb-3">To Buy</h2>
+          <h2 className="font-bold text-slate-800 text-lg mb-4">To Buy</h2>
           {activeItems.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-8 bg-white rounded-2xl border border-gray-100 border-dashed">
-              Your shopping list is empty.
-            </p>
+            <div className="text-center py-12 bg-white/50 rounded-3xl border border-slate-200 border-dashed">
+              <div className="text-4xl mb-3">🛒</div>
+              <p className="text-slate-500 font-medium">Your shopping list is empty.</p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {CATEGORIES.map(category => {
                 const itemsInCategory = groupedActiveItems[category];
                 if (!itemsInCategory || itemsInCategory.length === 0) return null;
 
                 return (
-                  <div key={category} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-2 border-b border-gray-100">
-                      <h3 className="font-semibold text-gray-700 text-sm capitalize">{category}</h3>
+                  <div key={category} className="bg-white rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden">
+                    <div className="bg-slate-50/80 px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+                      <span className="text-xl">{getCategoryEmoji(category)}</span>
+                      <h3 className="font-bold text-slate-700 capitalize">{category}</h3>
                     </div>
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-slate-50">
                       {itemsInCategory.map(item => (
-                        <div key={item.id} className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center gap-3 flex-1">
-                            <button onClick={() => handleTogglePurchased(item)} className="text-gray-300 hover:text-emerald-500 transition-colors">
-                              <Circle size={22} />
-                            </button>
+                        <motion.div 
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          key={item.id} 
+                          className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors group"
+                        >
+                          <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => handleTogglePurchased(item)}>
+                            <div className="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-hover:border-[#38BDF8] transition-colors">
+                            </div>
                             <div>
-                              <p className="font-medium text-gray-900 capitalize">{item.name}</p>
-                              <p className="text-xs text-gray-500">{item.quantity}</p>
+                              <p className="font-bold text-slate-800 capitalize text-lg leading-tight">{item.name}</p>
+                              <p className="text-sm font-medium text-slate-500">{item.quantity}</p>
                             </div>
                           </div>
-                          <button onClick={() => handleDeleteItem(item.id)} className="text-gray-300 hover:text-red-500 p-2">
-                            <Trash2 size={16} />
+                          <button onClick={() => handleDeleteItem(item.id)} className="text-slate-300 hover:text-rose-500 p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <Trash2 size={18} />
                           </button>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
@@ -370,38 +386,44 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
         {/* Purchased Items */}
         {purchasedItems.length > 0 && (
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="font-bold text-gray-900">Purchased</h2>
-              <button onClick={handleClearPurchased} className="text-xs text-red-500 font-medium hover:underline">
+          <div className="pt-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-bold text-slate-800 text-lg">Purchased</h2>
+              <button onClick={handleClearPurchased} className="text-sm text-rose-500 font-bold hover:underline bg-rose-50 px-3 py-1 rounded-lg">
                 Clear All
               </button>
             </div>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-50">
+            <div className="bg-white/60 rounded-3xl shadow-sm border border-slate-100 divide-y divide-slate-50">
               {purchasedItems.map(item => (
-                <div key={item.id} className="flex items-center justify-between p-3 opacity-60">
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => handleTogglePurchased(item)} className="text-emerald-500">
-                      <CheckCircle2 size={22} />
-                    </button>
-                    <p className="font-medium text-gray-500 line-through capitalize">{item.name}</p>
+                <motion.div 
+                  layout
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  key={item.id} 
+                  className="flex items-center justify-between p-4 opacity-60 hover:opacity-100 transition-opacity"
+                >
+                  <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTogglePurchased(item)}>
+                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm">
+                      <Check size={14} strokeWidth={3} />
+                    </div>
+                    <p className="font-bold text-slate-500 line-through capitalize text-lg">{item.name}</p>
                   </div>
-                  <button onClick={() => handleDeleteItem(item.id)} className="text-gray-300 hover:text-red-500 p-2">
-                    <Trash2 size={16} />
+                  <button onClick={() => handleDeleteItem(item.id)} className="text-slate-300 hover:text-rose-500 p-2">
+                    <Trash2 size={18} />
                   </button>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
         )}
 
         {/* Export/Import */}
-        <div className="flex gap-2 pt-4 border-t border-gray-200">
-          <button onClick={handleExport} className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 font-medium py-2 rounded-xl text-sm hover:bg-gray-50">
-            <Download size={16} /> Export
+        <div className="flex gap-3 pt-6 border-t border-slate-200/60">
+          <button onClick={handleExport} className="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-2xl text-sm hover:bg-slate-50 shadow-sm transition-all active:scale-95">
+            <Download size={18} /> Export
           </button>
-          <label className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 font-medium py-2 rounded-xl text-sm hover:bg-gray-50 cursor-pointer">
-            <Upload size={16} /> Import
+          <label className="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-2xl text-sm hover:bg-slate-50 cursor-pointer shadow-sm transition-all active:scale-95">
+            <Upload size={18} /> Import
             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
           </label>
         </div>
@@ -410,46 +432,49 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       {/* Purchased Action Prompt Modal */}
       <AnimatePresence>
         {showPurchasedPrompt && (
-          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl"
             >
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Item Purchased!</h3>
-              <p className="text-gray-600 mb-6">How would you like to add <span className="font-bold capitalize">{showPurchasedPrompt.name}</span> to your inventory?</p>
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 mb-6 mx-auto">
+                <Check size={32} strokeWidth={3} />
+              </div>
+              <h3 className="text-2xl font-extrabold text-slate-800 mb-2 text-center">Got it!</h3>
+              <p className="text-slate-500 mb-8 text-center font-medium">How would you like to add <span className="font-bold text-slate-800 capitalize">{showPurchasedPrompt.name}</span> to your inventory?</p>
               
               <div className="space-y-3">
                 <button 
                   onClick={() => handleConfirmPurchaseAction('scan')}
-                  className="w-full flex items-center gap-3 bg-emerald-50 border border-emerald-200 p-4 rounded-2xl hover:bg-emerald-100 transition-colors text-left"
+                  className="w-full flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-4 rounded-2xl hover:shadow-md transition-all text-left group"
                 >
-                  <div className="bg-emerald-100 p-2 rounded-full text-emerald-600">
-                    <Camera size={20} />
+                  <div className="bg-white p-3 rounded-xl text-emerald-500 shadow-sm group-hover:scale-110 transition-transform">
+                    <Camera size={22} />
                   </div>
                   <div>
-                    <p className="font-bold text-emerald-900">Scan Receipt Later</p>
-                    <p className="text-xs text-emerald-700">I'll scan my receipt to add all items at once.</p>
+                    <p className="font-bold text-emerald-900 text-lg">Scan Receipt Later</p>
+                    <p className="text-xs font-medium text-emerald-600/80">I'll scan my receipt to add all items.</p>
                   </div>
                 </button>
 
                 <button 
                   onClick={() => handleConfirmPurchaseAction('quick')}
-                  className="w-full flex items-center gap-3 bg-blue-50 border border-blue-200 p-4 rounded-2xl hover:bg-blue-100 transition-colors text-left"
+                  className="w-full flex items-center gap-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 p-4 rounded-2xl hover:shadow-md transition-all text-left group"
                 >
-                  <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                    <PackagePlus size={20} />
+                  <div className="bg-white p-3 rounded-xl text-blue-500 shadow-sm group-hover:scale-110 transition-transform">
+                    <PackagePlus size={22} />
                   </div>
                   <div>
-                    <p className="font-bold text-blue-900">Quick Add Now</p>
-                    <p className="text-xs text-blue-700">Add directly to inventory with default expiry.</p>
+                    <p className="font-bold text-blue-900 text-lg">Quick Add Now</p>
+                    <p className="text-xs font-medium text-blue-600/80">Add directly with default expiry.</p>
                   </div>
                 </button>
 
                 <button 
                   onClick={() => handleConfirmPurchaseAction('just_mark')}
-                  className="w-full text-center text-gray-500 font-medium py-2 hover:text-gray-700"
+                  className="w-full text-center text-slate-400 font-bold py-3 hover:text-slate-600 transition-colors mt-2"
                 >
                   Just mark as purchased
                 </button>
