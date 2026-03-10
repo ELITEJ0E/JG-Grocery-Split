@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Camera, Upload, X, Check, Loader2, Barcode, Edit3, AlertTriangle } from 'lucide-react';
 import { InventoryItem } from '../types';
-import { parseReceiptImage, searchBarcode } from '../services/geminiService';
+import { parseReceiptImage, searchBarcode, identifyProductImage } from '../services/geminiService';
 import { motion } from 'motion/react';
 import CameraCapture from './CameraCapture';
 import BarcodeScanner from './BarcodeScanner';
@@ -14,7 +14,7 @@ interface ScanViewProps {
 const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [activeScanner, setActiveScanner] = useState<'none' | 'camera' | 'barcode'>('none');
+  const [activeScanner, setActiveScanner] = useState<'none' | 'camera' | 'barcode' | 'product'>('none');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processImage = async (base64Image: string) => {
@@ -27,6 +27,25 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
     } catch (err) {
       console.error(err);
       setError("Failed to analyze receipt. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const processProductImage = async (base64Image: string) => {
+    setActiveScanner('none');
+    setIsProcessing(true);
+    setError('');
+    try {
+      const result = await identifyProductImage(base64Image);
+      if (result) {
+        onItemsExtracted([result]);
+      } else {
+        setError("Could not identify the product from the image.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to analyze product image. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -73,7 +92,11 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
   };
 
   if (activeScanner === 'camera') {
-    return <CameraCapture onCapture={processImage} onCancel={() => setActiveScanner('none')} />;
+    return <CameraCapture onCapture={processImage} onCancel={() => setActiveScanner('none')} title="Scan Receipt 📸" />;
+  }
+
+  if (activeScanner === 'product') {
+    return <CameraCapture onCapture={processProductImage} onCancel={() => setActiveScanner('none')} title="Scan Product 🍎" />;
   }
 
   if (activeScanner === 'barcode') {
@@ -137,6 +160,21 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
             <div>
               <h3 className="font-extrabold text-slate-800 text-lg mb-1">Scan Receipt 📸</h3>
               <p className="text-sm text-slate-500 font-medium leading-tight">Take a photo of your bill to auto-extract items</p>
+            </div>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActiveScanner('product')}
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-rose-400/30 hover:shadow-[0_8px_25px_rgba(244,63,94,0.1)] transition-all w-full text-left"
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-rose-400/10 to-pink-500/10 rounded-2xl flex items-center justify-center group-hover:from-rose-400/20 group-hover:to-pink-500/20 transition-colors flex-shrink-0 shadow-inner">
+              <Camera size={28} className="text-rose-500" strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-lg mb-1">Scan Product 🍎</h3>
+              <p className="text-sm text-slate-500 font-medium leading-tight">Take a photo of a product to identify it</p>
             </div>
           </motion.button>
 

@@ -4,9 +4,10 @@ import { Camera, X, RefreshCw } from 'lucide-react';
 interface CameraCaptureProps {
   onCapture: (imageSrc: string) => void;
   onCancel: () => void;
+  title?: string;
 }
 
-const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onCancel }) => {
+const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onCancel, title = "Scan Receipt 📸" }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -61,7 +62,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onCancel }) =>
   return (
     <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col">
       <div className="flex justify-between items-center p-6 bg-gradient-to-b from-slate-900/90 to-transparent absolute top-0 w-full z-10">
-        <h2 className="text-white font-extrabold text-xl drop-shadow-md tracking-tight">Scan Receipt 📸</h2>
+        <h2 className="text-white font-extrabold text-xl drop-shadow-md tracking-tight">{title}</h2>
         <button 
           onClick={() => {
             if (stream) stream.getTracks().forEach(track => track.stop());

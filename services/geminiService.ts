@@ -79,6 +79,66 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ items: P
   }
 };
 
+export const identifyProductImage = async (base64Image: string): Promise<Partial<InventoryItem> | null> => {
+  const base64Data = base64Image.split(',')[1] || base64Image;
+  const mimeType = base64Image.split(';')[0].split(':')[1] || "image/jpeg";
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType,
+              data: base64Data
+            }
+          },
+          {
+            text: `Identify this grocery product from the image.
+            Return a JSON object with:
+            - name (string, normalized, singular form)
+            - quantity (number, default 1)
+            - unit (string, e.g., 'pack', 'bottle', 'piece')
+            - unitPrice (number, estimate if unknown)
+            - category (must be exactly one of: 'produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other')
+            - shelfLifeDays (number, estimated shelf life)
+            
+            If you cannot identify the product, return an empty object {}.`
+          }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING },
+            quantity: { type: Type.NUMBER },
+            unit: { type: Type.STRING },
+            unitPrice: { type: Type.NUMBER },
+            category: { type: Type.STRING },
+            shelfLifeDays: { type: Type.NUMBER },
+          }
+        }
+      }
+    });
+
+    const text = response.text;
+    if (!text) {
+      return null;
+    }
+    
+    const data = JSON.parse(text);
+    if (!data.name) return null;
+    
+    return data;
+  } catch (error) {
+    console.error("Error identifying product image:", error);
+    return null;
+  }
+};
+
 export const searchBarcode = async (barcode: string): Promise<Partial<InventoryItem> | null> => {
   try {
     const response = await ai.models.generateContent({
