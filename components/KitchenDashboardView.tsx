@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { InventoryItem, Recipe, MealPlan } from '../types';
 import { differenceInDays, parseISO, format, isSameDay } from 'date-fns';
-import { motion, AnimatePresence } from 'motion/react';
 import { 
   AlertTriangle, 
   ChefHat, 
@@ -102,13 +101,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, isShelf =
 
   return (
     <>
-      <motion.div
-        layoutId={`card-${item.id}`}
-        whileHover={{ scale: 1.02, y: -2 }}
-        whileTap={{ scale: 0.98 }}
+      <div
         onClick={() => setExpanded(true)}
         className={clsx(
-          "rounded-xl p-3 cursor-pointer transition-all relative overflow-hidden group",
+          "rounded-xl p-3 cursor-pointer transition-all relative overflow-hidden group hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95",
           isShelf 
             ? "bg-white/95 backdrop-blur-sm shadow-[0_4px_12px_rgba(0,0,0,0.02),inset_0_1px_2px_rgba(255,255,255,0.8)] border border-white/80" 
             : "bg-white p-4 rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100/50 hover:shadow-md"
@@ -146,26 +142,18 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, isShelf =
           <div className={clsx("w-1.5 h-1.5 rounded-full", expiry.dot)}></div>
           {expiry.label}
         </div>
-      </motion.div>
+      </div>
 
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end justify-center p-4"
-            onClick={() => setExpanded(false)}
+      {expanded && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end justify-center p-4 animate-fade-in"
+          onClick={() => setExpanded(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl animate-slide-up"
           >
-            <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              onClick={e => e.stopPropagation()}
-              className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl"
-            >
-              <div className="flex justify-between items-start mb-6">
+            <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-4">
                   <div className="text-4xl w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-inner">
                     {emoji}
@@ -191,8 +179,9 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, isShelf =
                   <span className="font-bold text-slate-700">Quantity</span>
                   <div className="flex items-center gap-4">
                     <button
-                      onClick={() => {
-                        if (item.quantity > 1) onUpdate({ ...item, quantity: item.quantity - 1 });
+                      onClick={(e) => {
+                        e.stopPropagation(); // Add this line
+                        if (item.quantity > 0) onUpdate({ ...item, quantity: Math.max(0, item.quantity - 1) });
                       }}
                       className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors"
                     >
@@ -202,7 +191,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, isShelf =
                       {item.quantity} {item.unit}
                     </span>
                     <button
-                      onClick={() => onUpdate({ ...item, quantity: item.quantity + 1 })}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Add this line
+                        if (item.quantity < 999) onUpdate({ ...item, quantity: Math.min(999, item.quantity + 1) });
+                      }}
                       className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors"
                     >
                       <Plus size={14} />
@@ -213,23 +205,80 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, isShelf =
 
               <div className="space-y-3">
                 <button
-                  onClick={() => { onUpdate({ ...item, isUsed: true }); setExpanded(false); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); // Add this line
+                    onUpdate({ ...item, isUsed: true }); 
+                    setExpanded(false); 
+                  }}
                   className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-95"
                 >
                   <Check size={18} strokeWidth={3} /> Mark as Used
                 </button>
                 <button
-                  onClick={() => { onDelete(item.id); setExpanded(false); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); // Add this line
+                    onDelete(item.id); 
+                    setExpanded(false); 
+                  }}
                   className="w-full bg-rose-50 text-rose-600 border border-rose-100 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-100 transition-all active:scale-95"
                 >
                   Remove Item
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
     </>
+  );
+};
+
+
+// Fridge Shelf Component
+const FridgeShelf: React.FC<{
+  items: InventoryItem[];
+  shelfNumber: number;
+  isFreezer?: boolean;
+  onUpdateItem: (item: InventoryItem) => void;
+  onDeleteItem: (id: string) => void;
+}> = ({ items, shelfNumber, isFreezer, onUpdateItem, onDeleteItem }) => {
+  // Split items into two columns for shelf display
+  const leftItems = items.filter((_, i) => i % 2 === 0);
+  const rightItems = items.filter((_, i) => i % 2 === 1);
+
+  return (
+    <div className="relative">
+      {/* Shelf label with temperature indicator */}
+      <div className="flex items-center gap-2 mb-2 px-1">
+        <div className={clsx(
+          "w-1 h-4 rounded-full",
+          isFreezer ? "bg-blue-400" : "bg-[#38BDF8]"
+        )}></div>
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+          {isFreezer ? 'Freezer Shelf' : 'Fridge Shelf'} {shelfNumber}
+        </span>
+        <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent"></div>
+      </div>
+
+      {/* Shelf content */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        {leftItems.map(item => (
+          <ItemCard key={item.id} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} isShelf={true} />
+        ))}
+        {rightItems.map(item => (
+          <ItemCard key={item.id} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} isShelf={true} />
+        ))}
+      </div>
+
+      {/* Glass shelf with reflection effect */}
+      <div className="relative h-6 mb-2">
+        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+        <div className="absolute inset-x-4 top-0 h-3 bg-gradient-to-b from-white/60 via-white/20 to-transparent rounded-full blur-sm"></div>
+        <div className="absolute inset-x-2 top-1 h-2 bg-gradient-to-b from-slate-200/30 to-transparent blur-sm"></div>
+        {isFreezer && (
+          <div className="absolute right-8 -top-1 text-blue-200/50 text-xs">❄️</div>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -307,53 +356,6 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
-  // Fridge Shelf Component
-  const FridgeShelf: React.FC<{
-    items: InventoryItem[];
-    shelfNumber: number;
-    isFreezer?: boolean;
-  }> = ({ items, shelfNumber, isFreezer }) => {
-    // Split items into two columns for shelf display
-    const leftItems = items.filter((_, i) => i % 2 === 0);
-    const rightItems = items.filter((_, i) => i % 2 === 1);
-
-    return (
-      <div className="relative">
-        {/* Shelf label with temperature indicator */}
-        <div className="flex items-center gap-2 mb-2 px-1">
-          <div className={clsx(
-            "w-1 h-4 rounded-full",
-            isFreezer ? "bg-blue-400" : "bg-[#38BDF8]"
-          )}></div>
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            {isFreezer ? 'Freezer Shelf' : 'Fridge Shelf'} {shelfNumber}
-          </span>
-          <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent"></div>
-        </div>
-
-        {/* Shelf content */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          {leftItems.map(item => (
-            <ItemCard key={item.id} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} isShelf={true} />
-          ))}
-          {rightItems.map(item => (
-            <ItemCard key={item.id} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} isShelf={true} />
-          ))}
-        </div>
-
-        {/* Glass shelf with reflection effect */}
-        <div className="relative h-6 mb-2">
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
-          <div className="absolute inset-x-4 top-0 h-3 bg-gradient-to-b from-white/60 via-white/20 to-transparent rounded-full blur-sm"></div>
-          <div className="absolute inset-x-2 top-1 h-2 bg-gradient-to-b from-slate-200/30 to-transparent blur-sm"></div>
-          {isFreezer && (
-            <div className="absolute right-8 -top-1 text-blue-200/50 text-xs">❄️</div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-col h-full pb-28 relative">
       {/* Header with InventoryView style - white/60 backdrop-blur */}
@@ -372,24 +374,20 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
           </div>
           
           {/* Pantry shortcut - matching InventoryView filter button style */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={() => onNavigate('inventory')}
-            className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white px-4 py-2 rounded-2xl font-bold text-sm shadow-md shadow-[#38BDF8]/20 flex items-center gap-2"
+            className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white px-4 py-2 rounded-2xl font-bold text-sm shadow-md shadow-[#38BDF8]/20 flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform"
           >
             <Package size={20} />
             Pantry
-          </motion.button>
+          </button>
         </div>
 
         {/* Quick Stats - matching InventoryView card style */}
         <div className="grid grid-cols-3 gap-3">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden"
+          <div
+            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-slide-up"
+            style={{ animationDelay: '0.1s' }}
           >
             <div className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] px-3 py-2">
               <Thermometer size={16} className="text-white" />
@@ -398,13 +396,11 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
               <span className="text-2xl font-black text-slate-800 block">{fridgeItems.length}</span>
               <p className="text-xs font-bold text-slate-600">In Fridge</p>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden"
+          <div
+            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-slide-up"
+            style={{ animationDelay: '0.2s' }}
           >
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2">
               <AlertTriangle size={16} className="text-white" />
@@ -413,13 +409,11 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
               <span className="text-2xl font-black text-slate-800 block">{expiringSoon.length}</span>
               <p className="text-xs font-bold text-slate-600">Expiring Soon</p>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden"
+          <div
+            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-slide-up"
+            style={{ animationDelay: '0.3s' }}
           >
             <div className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] px-3 py-2">
               <ChefHat size={16} className="text-white" />
@@ -428,7 +422,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
               <span className="text-2xl font-black text-slate-800 block">{todayMeals.length}</span>
               <p className="text-xs font-bold text-slate-600">Today's Meals</p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
@@ -437,10 +431,8 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
         <div className="grid grid-cols-2 gap-3">
           {/* Expiring Soon Note */}
           {expiringSoon.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100/50 rounded-2xl p-4 shadow-sm relative overflow-hidden"
+            <div 
+              className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100/50 rounded-2xl p-4 shadow-sm relative overflow-hidden animate-fade-in"
             >
               {/* Magnet effect */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 bg-gradient-to-r from-amber-400 to-orange-400 rounded-b-lg shadow-inner"></div>
@@ -466,15 +458,13 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                   <p className="text-xs text-slate-400 text-center mt-1">+{expiringSoon.length - 3} more</p>
                 )}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Cook Today Note */}
           {cookableMeals.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-100/50 rounded-2xl p-4 shadow-sm relative overflow-hidden"
+            <div 
+              className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-100/50 rounded-2xl p-4 shadow-sm relative overflow-hidden animate-fade-in"
             >
               {/* Magnet effect */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-b-lg shadow-inner"></div>
@@ -496,15 +486,13 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                   <p className="text-xs text-slate-400 text-center mt-1">+{cookableMeals.length - 3} more</p>
                 )}
               </div>
-            </motion.div>
+            </div>
           )}
         </div>
 
         {/* Main Fridge Container - Opened Door View */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative"
+        <div 
+          className="relative animate-slide-up"
         >
           {/* Fridge exterior frame */}
           <div className="bg-gradient-to-b from-slate-200 to-slate-300 rounded-[2rem] p-2 shadow-xl">
@@ -556,6 +544,8 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                         items={freezerItems.slice(0, Math.ceil(freezerItems.length / 2))} 
                         shelfNumber={1} 
                         isFreezer={true}
+                        onUpdateItem={onUpdateItem}
+                        onDeleteItem={onDeleteItem}
                       />
                     )}
                     {freezerItems.length > 2 && (
@@ -563,6 +553,8 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                         items={freezerItems.slice(Math.ceil(freezerItems.length / 2))} 
                         shelfNumber={2} 
                         isFreezer={true}
+                        onUpdateItem={onUpdateItem}
+                        onDeleteItem={onDeleteItem}
                       />
                     )}
                   </div>
@@ -612,18 +604,24 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                       <FridgeShelf 
                         items={fridgeItems.slice(0, Math.ceil(fridgeItems.length / 3))} 
                         shelfNumber={1} 
+                        onUpdateItem={onUpdateItem}
+                        onDeleteItem={onDeleteItem}
                       />
                     )}
                     {fridgeItems.length > 2 && (
                       <FridgeShelf 
                         items={fridgeItems.slice(Math.ceil(fridgeItems.length / 3), Math.ceil(2 * fridgeItems.length / 3))} 
                         shelfNumber={2} 
+                        onUpdateItem={onUpdateItem}
+                        onDeleteItem={onDeleteItem}
                       />
                     )}
                     {fridgeItems.length > 4 && (
                       <FridgeShelf 
                         items={fridgeItems.slice(Math.ceil(2 * fridgeItems.length / 3))} 
                         shelfNumber={3} 
+                        onUpdateItem={onUpdateItem}
+                        onDeleteItem={onDeleteItem}
                       />
                     )}
                   </div>
@@ -647,13 +645,11 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Pantry Cabinet - Modern design with search */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4 relative"
+        <div
+          className="mt-4 relative animate-slide-up"
         >
           {/* Cabinet exterior - light wooden frame */}
           <div className="bg-gradient-to-b from-amber-100 to-amber-200 rounded-2xl p-3 shadow-xl border border-amber-300">
@@ -770,7 +766,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

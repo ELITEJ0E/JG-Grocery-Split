@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { InventoryItem, Recipe, MealPlan, RecipeIngredient } from '../types';
 import { Plus, Search, Calendar, BookOpen, Download, Upload, Trash2, Edit2, AlertCircle, CheckCircle2, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { format, addDays, parseISO, isSameDay } from 'date-fns';
 import { clsx } from 'clsx';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface MealPlannerViewProps {
   recipes: Recipe[];
@@ -201,11 +201,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
 
       <div className="flex-1 overflow-y-auto p-6">
         {activeTab === 'recipes' && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
-          >
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="flex gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
@@ -248,10 +244,9 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                 </div>
               ) : (
                 filteredRecipes.map(recipe => (
-                  <motion.div 
-                    whileHover={{ scale: 1.01 }}
+                  <div 
                     key={recipe.id} 
-                    className="bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group"
+                    className="bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group transition-transform duration-200 hover:scale-[1.01]"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -270,19 +265,15 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                         {recipe.ingredients.map(i => i.name).join(', ')}
                       </p>
                     </div>
-                  </motion.div>
+                  </div>
                 ))
               )}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {activeTab === 'plan' && (
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
-          >
+          <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
             {days.map(day => {
               const dateStr = format(day, 'yyyy-MM-dd');
               const dayPlans = mealPlans.filter(mp => mp.date === dateStr);
@@ -346,26 +337,15 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                 </div>
               );
             })}
-          </motion.div>
+          </div>
         )}
       </div>
 
       {/* Recipe Modal */}
-      <AnimatePresence>
-        {isRecipeModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh]"
-            >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+      {isRecipeModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="text-2xl font-extrabold text-slate-800">{editingRecipe ? 'Edit Recipe 📝' : 'New Recipe ✨'}</h3>
                 <button onClick={() => setIsRecipeModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors">
                   <X size={20} />
@@ -479,27 +459,14 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                   Save Recipe
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
-
       {/* Plan Meal Modal */}
-      <AnimatePresence>
-        {isPlanModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh]"
-            >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+      {isPlanModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="text-2xl font-extrabold text-slate-800">Plan Meal 📅</h3>
                 <button onClick={() => setIsPlanModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors">
                   <X size={20} />
@@ -509,24 +476,26 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
               <div className="p-6 overflow-y-auto flex-1 space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Select Recipe</label>
-                  <select
+                  <Select
                     value={planForm.recipeId}
-                    onChange={(e) => {
-                      const rId = e.target.value;
-                      const recipe = recipes.find(r => r.id === rId);
+                    onValueChange={(value) => {
+                      const recipe = recipes.find(r => r.id === value);
                       setPlanForm({ 
                         ...planForm, 
-                        recipeId: rId,
+                        recipeId: value,
                         assignedItems: recipe ? recipe.ingredients.map((_, idx) => ({ ingredientIndex: idx, inventoryItemId: '', quantity: 0 })) : []
                       });
                     }}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
                   >
-                    <option value="">-- Choose a recipe --</option>
-                    {recipes.map(r => (
-                      <option key={r.id} value={r.id}>{r.name}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800 h-auto">
+                      <SelectValue placeholder="-- Choose a recipe --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {recipes.map(r => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {planForm.recipeId && (
@@ -544,32 +513,37 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                               <span className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-1 rounded-lg">{ing.quantity} {ing.unit} needed</span>
                             </div>
                             <div className="flex gap-2">
-                              <select
-                                value={assignment?.inventoryItemId || ''}
-                                onChange={(e) => {
-                                  const newAssignments = [...planForm.assignedItems];
-                                  const aIdx = newAssignments.findIndex(a => a.ingredientIndex === idx);
-                                  if (aIdx >= 0) {
-                                    newAssignments[aIdx].inventoryItemId = e.target.value;
-                                    // Auto-fill quantity if an item is selected
-                                    if (e.target.value) {
-                                      const invItem = inventory.find(i => i.id === e.target.value);
-                                      newAssignments[aIdx].quantity = Math.min(ing.quantity, invItem?.quantity || 0);
-                                    } else {
-                                      newAssignments[aIdx].quantity = 0;
+                              <div className="flex-1">
+                                <Select
+                                  value={assignment?.inventoryItemId || ''}
+                                  onValueChange={(value) => {
+                                    const newAssignments = [...planForm.assignedItems];
+                                    const aIdx = newAssignments.findIndex(a => a.ingredientIndex === idx);
+                                    if (aIdx >= 0) {
+                                      newAssignments[aIdx].inventoryItemId = value;
+                                      // Auto-fill quantity if an item is selected
+                                      if (value) {
+                                        const invItem = inventory.find(i => i.id === value);
+                                        newAssignments[aIdx].quantity = Math.min(ing.quantity, invItem?.quantity || 0);
+                                      } else {
+                                        newAssignments[aIdx].quantity = 0;
+                                      }
                                     }
-                                  }
-                                  setPlanForm({ ...planForm, assignedItems: newAssignments });
-                                }}
-                                className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#4ADE80] font-medium"
-                              >
-                                <option value="">-- Select Inventory --</option>
-                                {activeInventory.map(item => (
-                                  <option key={item.id} value={item.id}>
-                                    {item.name} ({item.quantity} {item.unit} avail)
-                                  </option>
-                                ))}
-                              </select>
+                                    setPlanForm({ ...planForm, assignedItems: newAssignments });
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#4ADE80] font-medium h-auto">
+                                    <SelectValue placeholder="-- Select Inventory --" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {activeInventory.map(item => (
+                                      <SelectItem key={item.id} value={item.id}>
+                                        {item.name} ({item.quantity} {item.unit} avail)
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                               {assignment?.inventoryItemId && (
                                 <input
                                   type="number"
@@ -611,10 +585,9 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                   Save to Plan
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
     </div>
   );
 };

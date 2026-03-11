@@ -3,7 +3,6 @@ import { InventoryItem, Category, MealPlan, Recipe } from '../types';
 import { Search, Trash2, AlertCircle, Check } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
 import { clsx } from 'clsx';
-import { motion, AnimatePresence } from 'motion/react';
 import { getCategoryEmoji, getCategoryColor } from '../utils';
 
 interface InventoryViewProps {
@@ -94,11 +93,9 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
             </h2>
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 snap-x">
               {expiringSoonItems.map(item => (
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <div 
                   key={item.id} 
-                  className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/50 p-4 rounded-3xl min-w-[180px] flex-shrink-0 snap-start shadow-sm"
+                  className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/50 p-4 rounded-3xl min-w-[180px] flex-shrink-0 snap-start shadow-sm transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="text-3xl bg-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm">
@@ -119,7 +116,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
                       <Check size={16} /> Use
                     </button>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -135,17 +132,12 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
           </div>
         ) : (
           <div className="grid gap-4">
-            <AnimatePresence>
               {filteredItems.map(item => {
                 const status = getExpiryStatus(item.expiryDate);
                 return (
-                  <motion.div
+                  <div
                     key={item.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9, x: -20 }}
-                    whileHover={{ scale: 1.01 }}
-                    className="bg-white p-4 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100/50 flex items-center gap-4 relative overflow-hidden group"
+                    className="bg-white p-4 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100/50 flex items-center gap-4 relative overflow-hidden group transition-transform duration-200 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300"
                   >
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-[#4ADE80] to-[#38BDF8] opacity-50"></div>
                     
@@ -182,10 +174,9 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
                         </button>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
-            </AnimatePresence>
           </div>
         )}
       </div>

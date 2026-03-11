@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { InventoryItem } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, Trash2, PieChart as PieChartIcon, AlertTriangle } from 'lucide-react';
-import { motion } from 'motion/react';
 import { getCategoryEmoji } from '../utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface AnalyticsViewProps {
   inventory: InventoryItem[];
@@ -48,32 +48,30 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
     <div className="flex flex-col h-full pb-28 relative">
       <div className="bg-white/60 backdrop-blur-xl px-6 pt-8 pb-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl flex justify-between items-center">
         <h1 className="text-3xl font-extrabold text-[#1E293B] tracking-tight">Stats 📊</h1>
-        <div className="relative">
-          <select
+        <div className="relative w-32">
+          <Select
             value={currency.code}
-            onChange={(e) => {
-              const selected = CURRENCIES.find(c => c.code === e.target.value);
+            onValueChange={(value) => {
+              const selected = CURRENCIES.find(c => c.code === value);
               if (selected) setCurrency(selected);
             }}
-            className="appearance-none bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl pl-4 pr-10 py-2.5 outline-none shadow-sm focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 transition-all cursor-pointer"
           >
-            {CURRENCIES.map(c => (
-              <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
-            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-          </div>
+            <SelectTrigger className="w-full bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-4 py-2.5 outline-none shadow-sm focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 transition-all cursor-pointer h-auto">
+              <SelectValue placeholder="Currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {CURRENCIES.map(c => (
+                <SelectItem key={c.code} value={c.code}>{c.code} ({c.symbol})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
         <div className="grid grid-cols-2 gap-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-[#4ADE80]/10 to-[#38BDF8]/10 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white"
+          <div 
+            className="bg-gradient-to-br from-[#4ADE80]/10 to-[#38BDF8]/10 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 fill-mode-both"
           >
             <div className="flex items-center gap-2 text-[#38BDF8] mb-3">
               <div className="p-2 bg-white rounded-xl shadow-sm">
@@ -82,13 +80,10 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
               <h3 className="font-extrabold text-xs uppercase tracking-wider">Total Spent</h3>
             </div>
             <p className="text-3xl font-black text-slate-800 tracking-tight">{formatCurrency(totalSpent)}</p>
-          </motion.div>
+          </div>
           
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-rose-50 to-orange-50 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white"
+          <div 
+            className="bg-gradient-to-br from-rose-50 to-orange-50 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both"
           >
             <div className="flex items-center gap-2 text-rose-500 mb-3">
               <div className="p-2 bg-white rounded-xl shadow-sm">
@@ -101,14 +96,11 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
               <AlertTriangle size={12} className="text-rose-500" />
               <p className="text-xs text-rose-600 font-bold">{wastePercentage.toFixed(1)}% of total</p>
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100"
+        <div 
+          className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both"
         >
           <div className="flex items-center gap-2 mb-6">
             <PieChartIcon size={20} className="text-[#4ADE80]" />
@@ -168,14 +160,11 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
               <p className="font-medium">No spending data yet.</p>
             </div>
           )}
-        </motion.div>
+        </div>
 
         {topWasted.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100"
+          <div 
+            className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500 fill-mode-both"
           >
             <div className="flex items-center gap-2 mb-5">
               <TrendingDown size={20} className="text-rose-500" />
@@ -199,7 +188,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

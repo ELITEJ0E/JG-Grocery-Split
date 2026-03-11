@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { InventoryItem, Recipe, MealPlan, ShoppingListItem, Category } from '../types';
 import { Plus, Search, Trash2, CheckCircle2, Circle, Download, Upload, AlertCircle, ChevronDown, PackagePlus, Camera, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 import { differenceInDays } from 'date-fns';
 import { getCategoryEmoji } from '../utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface ShoppingListViewProps {
   inventory: InventoryItem[];
@@ -258,15 +258,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* Add Item Form */}
-        <AnimatePresence>
-          {showAddForm && (
-            <motion.form
-              initial={{ opacity: 0, height: 0, scale: 0.95 }}
-              animate={{ opacity: 1, height: 'auto', scale: 1 }}
-              exit={{ opacity: 0, height: 0, scale: 0.95 }}
-              onSubmit={handleAddItem}
-              className="bg-white p-5 rounded-3xl shadow-md border border-slate-100 overflow-hidden"
-            >
+        {showAddForm && (
+          <form
+            onSubmit={handleAddItem}
+            className="bg-white p-5 rounded-3xl shadow-md border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          >
               <h3 className="font-bold text-slate-800 mb-4 text-lg">Add New Item</h3>
               <div className="space-y-4">
                 <input
@@ -285,23 +281,28 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     onChange={(e) => setNewItemQuantity(e.target.value)}
                     className="w-1/3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20 outline-none transition-all"
                   />
-                  <select
-                    value={newItemCategory}
-                    onChange={(e) => setNewItemCategory(e.target.value as Category)}
-                    className="w-2/3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20 outline-none transition-all capitalize"
-                  >
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{getCategoryEmoji(cat)} {cat}</option>
-                    ))}
-                  </select>
+                  <div className="w-2/3">
+                    <Select
+                      value={newItemCategory}
+                      onValueChange={(value) => setNewItemCategory(value as Category)}
+                    >
+                      <SelectTrigger className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20 outline-none transition-all capitalize h-auto">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat} className="capitalize">{getCategoryEmoji(cat)} {cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <button type="submit" className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95">
                   Add to List
                 </button>
               </div>
-            </motion.form>
+            </form>
           )}
-        </AnimatePresence>
 
         {/* Suggested Restocks */}
         {suggestions.length > 0 && !searchQuery && (
@@ -312,11 +313,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             </div>
             <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar">
               {suggestions.map((sug, idx) => (
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <div 
                   key={idx} 
-                  className="flex-shrink-0 w-48 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/50 p-4 rounded-3xl snap-start shadow-sm"
+                  className="flex-shrink-0 w-48 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/50 p-4 rounded-3xl snap-start shadow-sm transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <div className="text-2xl mb-2">{getCategoryEmoji(sug.category)}</div>
                   <p className="font-bold text-slate-800 capitalize truncate text-lg">{sug.name}</p>
@@ -327,7 +326,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   >
                     + Add
                   </button>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -355,13 +354,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     </div>
                     <div className="divide-y divide-slate-50">
                       {itemsInCategory.map(item => (
-                        <motion.div 
-                          layout
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
+                        <div 
                           key={item.id} 
-                          className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors group"
+                          className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-300"
                         >
                           <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => handleTogglePurchased(item)}>
                             <div className="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-hover:border-[#38BDF8] transition-colors">
@@ -374,7 +369,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                           <button onClick={() => handleDeleteItem(item.id)} className="text-slate-300 hover:text-rose-500 p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <Trash2 size={18} />
                           </button>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -395,12 +390,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             </div>
             <div className="bg-white/60 rounded-3xl shadow-sm border border-slate-100 divide-y divide-slate-50">
               {purchasedItems.map(item => (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                <div 
                   key={item.id} 
-                  className="flex items-center justify-between p-4 opacity-60 hover:opacity-100 transition-opacity"
+                  className="flex items-center justify-between p-4 opacity-60 hover:opacity-100 transition-opacity animate-in fade-in slide-in-from-top-2 duration-300"
                 >
                   <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTogglePurchased(item)}>
                     <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm">
@@ -411,7 +403,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   <button onClick={() => handleDeleteItem(item.id)} className="text-slate-300 hover:text-rose-500 p-2">
                     <Trash2 size={18} />
                   </button>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -430,15 +422,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       </div>
 
       {/* Purchased Action Prompt Modal */}
-      <AnimatePresence>
-        {showPurchasedPrompt && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl"
-            >
+      {showPurchasedPrompt && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 mb-6 mx-auto">
                 <Check size={32} strokeWidth={3} />
               </div>
@@ -479,10 +465,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   Just mark as purchased
                 </button>
               </div>
-            </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };

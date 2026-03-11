@@ -2,7 +2,6 @@ import React, { useRef, useState } from 'react';
 import { Camera, Upload, X, Check, Loader2, Barcode, Edit3, AlertTriangle } from 'lucide-react';
 import { InventoryItem } from '../types';
 import { parseReceiptImage, searchBarcode, identifyProductImage } from '../services/geminiService';
-import { motion } from 'motion/react';
 import CameraCapture from './CameraCapture';
 import BarcodeScanner from './BarcodeScanner';
 
@@ -137,22 +136,18 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
 
       <div className="flex-1 overflow-y-auto px-6 py-6">
         {error && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-rose-50 text-rose-600 p-4 rounded-2xl mb-6 text-sm font-bold border border-rose-100 flex items-center gap-2 shadow-sm"
+          <div 
+            className="bg-rose-50 text-rose-600 p-4 rounded-2xl mb-6 text-sm font-bold border border-rose-100 flex items-center gap-2 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300"
           >
             <AlertTriangle size={18} />
             {error}
-          </motion.div>
+          </div>
         )}
 
         <div className="flex flex-col gap-4 max-w-sm mx-auto w-full pb-8">
-          <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={() => setActiveScanner('camera')}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-[#4ADE80]/30 hover:shadow-[0_8px_25px_rgba(74,222,128,0.1)] transition-all w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-[#4ADE80]/30 hover:shadow-[0_8px_25px_rgba(74,222,128,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-[#4ADE80]/10 to-[#38BDF8]/10 rounded-2xl flex items-center justify-center group-hover:from-[#4ADE80]/20 group-hover:to-[#38BDF8]/20 transition-colors flex-shrink-0 shadow-inner">
               <Camera size={28} className="text-[#4ADE80]" strokeWidth={2.5} />
@@ -161,13 +156,11 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
               <h3 className="font-extrabold text-slate-800 text-lg mb-1">Scan Receipt 📸</h3>
               <p className="text-sm text-slate-500 font-medium leading-tight">Take a photo of your bill to auto-extract items</p>
             </div>
-          </motion.button>
+          </button>
 
-          <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={() => setActiveScanner('product')}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-rose-400/30 hover:shadow-[0_8px_25px_rgba(244,63,94,0.1)] transition-all w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-rose-400/30 hover:shadow-[0_8px_25px_rgba(244,63,94,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-rose-400/10 to-pink-500/10 rounded-2xl flex items-center justify-center group-hover:from-rose-400/20 group-hover:to-pink-500/20 transition-colors flex-shrink-0 shadow-inner">
               <Camera size={28} className="text-rose-500" strokeWidth={2.5} />
@@ -176,13 +169,11 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
               <h3 className="font-extrabold text-slate-800 text-lg mb-1">Scan Product 🍎</h3>
               <p className="text-sm text-slate-500 font-medium leading-tight">Take a photo of a product to identify it</p>
             </div>
-          </motion.button>
+          </button>
 
-          <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={() => setActiveScanner('barcode')}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-[#38BDF8]/30 hover:shadow-[0_8px_25px_rgba(56,189,248,0.1)] transition-all w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-[#38BDF8]/30 hover:shadow-[0_8px_25px_rgba(56,189,248,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-[#38BDF8]/10 to-indigo-500/10 rounded-2xl flex items-center justify-center group-hover:from-[#38BDF8]/20 group-hover:to-indigo-500/20 transition-colors flex-shrink-0 shadow-inner">
               <Barcode size={28} className="text-[#38BDF8]" strokeWidth={2.5} />
@@ -191,13 +182,11 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
               <h3 className="font-extrabold text-slate-800 text-lg mb-1">Scan Barcode 🏷️</h3>
               <p className="text-sm text-slate-500 font-medium leading-tight">Quickly scan a single product's barcode</p>
             </div>
-          </motion.button>
+          </button>
 
-          <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-purple-400/30 hover:shadow-[0_8px_25px_rgba(168,85,247,0.1)] transition-all w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-purple-400/30 hover:shadow-[0_8px_25px_rgba(168,85,247,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-2xl flex items-center justify-center group-hover:from-purple-400/20 group-hover:to-pink-400/20 transition-colors flex-shrink-0 shadow-inner">
               <Upload size={28} className="text-purple-500" strokeWidth={2.5} />
@@ -206,13 +195,11 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
               <h3 className="font-extrabold text-slate-800 text-lg mb-1">Upload Image 🖼️</h3>
               <p className="text-sm text-slate-500 font-medium leading-tight">Select a receipt photo from your gallery</p>
             </div>
-          </motion.button>
+          </button>
 
-          <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={handleManualEntry}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-orange-400/30 hover:shadow-[0_8px_25px_rgba(251,146,60,0.1)] transition-all w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-orange-400/30 hover:shadow-[0_8px_25px_rgba(251,146,60,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-orange-400/10 to-amber-400/10 rounded-2xl flex items-center justify-center group-hover:from-orange-400/20 group-hover:to-amber-400/20 transition-colors flex-shrink-0 shadow-inner">
               <Edit3 size={28} className="text-orange-500" strokeWidth={2.5} />
@@ -221,7 +208,7 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
               <h3 className="font-extrabold text-slate-800 text-lg mb-1">Manual Entry ✍️</h3>
               <p className="text-sm text-slate-500 font-medium leading-tight">Type in your items one by one</p>
             </div>
-          </motion.button>
+          </button>
 
           <input
             type="file"

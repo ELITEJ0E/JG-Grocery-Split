@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Recipe, RecipeIngredient } from '../types';
 import { Search, Plus, Edit2, Trash2, Download, Upload, Star, X, Save } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 
 interface RecipesViewProps {
@@ -139,11 +138,9 @@ const RecipesView: React.FC<RecipesViewProps> = ({ recipes, onAddRecipe, onUpdat
         ) : (
           <div className="grid gap-4">
             {filteredRecipes.map(recipe => (
-              <motion.div
+              <div
                 key={recipe.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"
+                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-2 duration-300"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -175,21 +172,17 @@ const RecipesView: React.FC<RecipesViewProps> = ({ recipes, onAddRecipe, onUpdat
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md">+{recipe.ingredients.length - 3} more</span>
                   )}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
       </div>
 
       {/* Edit Modal */}
-      <AnimatePresence>
-        {isEditing && currentRecipe && (
-          <motion.div
-            initial={{ opacity: 0, y: '100%' }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: '100%' }}
-            className="fixed inset-0 bg-white z-50 flex flex-col"
-          >
+      {isEditing && currentRecipe && (
+        <div
+          className="fixed inset-0 bg-white z-50 flex flex-col animate-in slide-in-from-bottom duration-300"
+        >
             <div className="flex justify-between items-center p-4 border-b border-gray-100">
               <h2 className="text-xl font-bold">{currentRecipe.id ? 'Edit Recipe' : 'New Recipe'}</h2>
               <button onClick={() => setIsEditing(false)} className="p-2 bg-gray-100 rounded-full">
@@ -295,9 +288,8 @@ const RecipesView: React.FC<RecipesViewProps> = ({ recipes, onAddRecipe, onUpdat
                 Save Recipe
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </div>
   );
 };

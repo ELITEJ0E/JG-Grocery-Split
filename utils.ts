@@ -1,4 +1,10 @@
 import { Category } from './types';
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export const getCategoryEmoji = (category: Category | string): string => {
   switch (category.toLowerCase()) {

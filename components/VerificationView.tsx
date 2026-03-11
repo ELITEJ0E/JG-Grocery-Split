@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { InventoryItem, Category } from '../types';
 import { Check, X, Edit2, Trash2, Plus, PackageOpen } from 'lucide-react';
 import { addDays } from 'date-fns';
-import { motion } from 'motion/react';
 import { getCategoryEmoji } from '../utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface VerificationViewProps {
   items: Partial<InventoryItem>[];
@@ -78,12 +78,10 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
           </div>
         ) : (
           items.map((item, index) => (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 relative overflow-hidden group"
+              className="bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 relative overflow-hidden group animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300 fill-mode-both"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-[#4ADE80] to-[#38BDF8] opacity-50"></div>
               
@@ -139,20 +137,21 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                 <div>
                   <label className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mb-1.5 block">Category</label>
                   <div className="relative">
-                    <select
+                    <Select
                       value={item.category || 'other'}
-                      onChange={(e) => handleUpdate(index, 'category', e.target.value)}
-                      className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none capitalize transition-all"
+                      onValueChange={(value) => handleUpdate(index, 'category', value)}
                     >
-                      {CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <SelectTrigger className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none capitalize transition-all h-auto">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
                       {getCategoryEmoji(item.category as Category || 'other')}
-                    </div>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
                 </div>
@@ -166,33 +165,29 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                   />
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))
         )}
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           onClick={handleAddItem}
-          className="w-full border-2 border-dashed border-[#38BDF8]/30 bg-[#38BDF8]/5 text-[#38BDF8] font-bold py-4 rounded-3xl hover:bg-[#38BDF8]/10 transition-colors flex items-center justify-center gap-2"
+          className="w-full border-2 border-dashed border-[#38BDF8]/30 bg-[#38BDF8]/5 text-[#38BDF8] font-bold py-4 rounded-3xl hover:bg-[#38BDF8]/10 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
         >
           <Plus size={20} strokeWidth={3} />
           Add Another Item
-        </motion.button>
+        </button>
       </div>
 
       <div className="fixed bottom-20 left-0 right-0 p-6 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none">
         <div className="max-w-md mx-auto pointer-events-auto">
-          <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={handleConfirm}
             disabled={items.length === 0}
-            className="w-full bg-gradient-to-r from-[#4ADE80] to-[#2DD4BF] text-white font-extrabold py-4 rounded-2xl shadow-[0_8px_25px_rgba(45,212,191,0.3)] hover:shadow-[0_12px_30px_rgba(45,212,191,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-[#4ADE80] to-[#2DD4BF] text-white font-extrabold py-4 rounded-2xl shadow-[0_8px_25px_rgba(45,212,191,0.3)] hover:shadow-[0_12px_30px_rgba(45,212,191,0.4)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Check size={22} strokeWidth={3} />
             Save to Pantry
-          </motion.button>
+          </button>
         </div>
       </div>
     </div>

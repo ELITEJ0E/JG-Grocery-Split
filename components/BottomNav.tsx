@@ -2,7 +2,6 @@ import React from 'react';
 import { Camera, Utensils, ShoppingCart, BarChart2, Home } from 'lucide-react';
 import { AppState } from '../types';
 import { clsx } from 'clsx';
-import { motion } from 'motion/react';
 
 interface BottomNavProps {
   currentView: AppState;
@@ -31,17 +30,15 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, onNavigate }) => {
         )}
       >
         {isActive && (
-          <motion.div
-            layoutId="bottomNavActive"
-            className="absolute inset-0 rounded-2xl shadow-md"
+          <div
+            className="absolute inset-0 rounded-2xl shadow-md transition-all duration-300"
             style={{ background: 'linear-gradient(to right, #4ADE80, #38BDF8)' }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
           />
         )}
         <div className="relative z-10 flex flex-col items-center gap-1">
-          <motion.div whileTap={{ scale: 0.9 }} animate={{ y: isActive ? -2 : 0 }}>
+          <div className={clsx("transition-transform duration-200 active:scale-90", isActive ? "-translate-y-0.5" : "translate-y-0")}>
             {item.icon}
-          </motion.div>
+          </div>
           <span className={clsx("text-[10px] font-semibold tracking-wide", isActive ? "text-white" : "text-slate-500")}>
             {item.label}
           </span>
@@ -57,11 +54,9 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, onNavigate }) => {
 
         {/* Center Scan Button */}
         <div className="flex flex-col items-center relative -mt-6">
-          <motion.button
-            whileTap={{ scale: 0.92 }}
-            whileHover={{ scale: 1.05 }}
+          <button
             onClick={() => onNavigate('scan')}
-            className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-xl"
+            className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-xl transition-transform duration-200 hover:scale-105 active:scale-95"
             style={{ background: 'linear-gradient(to right, #4ADE80, #38BDF8)' }}
           >
             {/* Glow ring */}
@@ -70,7 +65,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, onNavigate }) => {
               style={{ background: 'linear-gradient(to right, #4ADE80, #38BDF8)' }}
             />
             <Camera size={26} className="text-white relative z-10" strokeWidth={2.5} />
-          </motion.button>
+          </button>
           <span className={clsx(
             "text-[10px] font-semibold tracking-wide mt-1",
             currentView === 'scan' ? "text-[#4ADE80]" : "text-slate-500"
