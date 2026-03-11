@@ -71,7 +71,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
       <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <div 
-            className="bg-gradient-to-br from-[#4ADE80]/10 to-[#38BDF8]/10 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 fill-mode-both"
+            className="bg-gradient-to-br from-[#4ADE80]/10 to-[#38BDF8]/10 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-spring-up"
           >
             <div className="flex items-center gap-2 text-[#38BDF8] mb-3">
               <div className="p-2 bg-white rounded-xl shadow-sm">
@@ -83,7 +83,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
           </div>
           
           <div 
-            className="bg-gradient-to-br from-rose-50 to-orange-50 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both"
+            className="bg-gradient-to-br from-rose-50 to-orange-50 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-spring-up"
           >
             <div className="flex items-center gap-2 text-rose-500 mb-3">
               <div className="p-2 bg-white rounded-xl shadow-sm">
@@ -100,7 +100,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
         </div>
 
         <div 
-          className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both"
+          className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up"
         >
           <div className="flex items-center gap-2 mb-6">
             <PieChartIcon size={20} className="text-[#4ADE80]" />
@@ -164,7 +164,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
 
         {topWasted.length > 0 && (
           <div 
-            className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500 fill-mode-both"
+            className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up"
           >
             <div className="flex items-center gap-2 mb-5">
               <TrendingDown size={20} className="text-rose-500" />

@@ -80,7 +80,7 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
           items.map((item, index) => (
             <div
               key={index}
-              className="bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 relative overflow-hidden group animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300 fill-mode-both"
+              className="bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 relative overflow-hidden group animate-spring-up"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-[#4ADE80] to-[#38BDF8] opacity-50"></div>

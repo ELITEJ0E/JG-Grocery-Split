@@ -137,7 +137,7 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
       <div className="flex-1 overflow-y-auto px-6 py-6">
         {error && (
           <div 
-            className="bg-rose-50 text-rose-600 p-4 rounded-2xl mb-6 text-sm font-bold border border-rose-100 flex items-center gap-2 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300"
+            className="bg-rose-50 text-rose-600 p-4 rounded-2xl mb-6 text-sm font-bold border border-rose-100 flex items-center gap-2 shadow-sm animate-slide-down"
           >
             <AlertTriangle size={18} />
             {error}

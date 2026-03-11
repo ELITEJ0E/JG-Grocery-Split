@@ -201,7 +201,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
 
       <div className="flex-1 overflow-y-auto p-6">
         {activeTab === 'recipes' && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-6 animate-spring-slide-left">
             <div className="flex gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
@@ -273,7 +273,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
         )}
 
         {activeTab === 'plan' && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
+          <div className="space-y-6 animate-spring-slide-right">
             {days.map(day => {
               const dateStr = format(day, 'yyyy-MM-dd');
               const dayPlans = mealPlans.filter(mp => mp.date === dateStr);
@@ -343,8 +343,8 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
 
       {/* Recipe Modal */}
       {isRecipeModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] animate-spring-up">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="text-2xl font-extrabold text-slate-800">{editingRecipe ? 'Edit Recipe 📝' : 'New Recipe ✨'}</h3>
                 <button onClick={() => setIsRecipeModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors">
@@ -464,8 +464,8 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
         )}
       {/* Plan Meal Modal */}
       {isPlanModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] animate-spring-up">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="text-2xl font-extrabold text-slate-800">Plan Meal 📅</h3>
                 <button onClick={() => setIsPlanModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors">

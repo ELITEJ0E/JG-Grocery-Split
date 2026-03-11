@@ -151,7 +151,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, isShelf =
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl animate-slide-up"
+            className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl animate-spring-up"
           >
             <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-4">
@@ -386,7 +386,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
         {/* Quick Stats - matching InventoryView card style */}
         <div className="grid grid-cols-3 gap-3">
           <div
-            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-slide-up"
+            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-spring-up"
             style={{ animationDelay: '0.1s' }}
           >
             <div className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] px-3 py-2">
@@ -399,7 +399,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
           </div>
 
           <div
-            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-slide-up"
+            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-spring-up"
             style={{ animationDelay: '0.2s' }}
           >
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2">
@@ -412,7 +412,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
           </div>
 
           <div
-            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-slide-up"
+            className="bg-white rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden animate-spring-up"
             style={{ animationDelay: '0.3s' }}
           >
             <div className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] px-3 py-2">
@@ -432,7 +432,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
           {/* Expiring Soon Note */}
           {expiringSoon.length > 0 && (
             <div 
-              className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100/50 rounded-2xl p-4 shadow-sm relative overflow-hidden animate-fade-in"
+              className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100/50 rounded-2xl p-4 shadow-sm relative overflow-hidden animate-spring-up"
             >
               {/* Magnet effect */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 bg-gradient-to-r from-amber-400 to-orange-400 rounded-b-lg shadow-inner"></div>
@@ -464,7 +464,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
           {/* Cook Today Note */}
           {cookableMeals.length > 0 && (
             <div 
-              className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-100/50 rounded-2xl p-4 shadow-sm relative overflow-hidden animate-fade-in"
+              className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-100/50 rounded-2xl p-4 shadow-sm relative overflow-hidden animate-spring-up"
             >
               {/* Magnet effect */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-b-lg shadow-inner"></div>
@@ -492,7 +492,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
 
         {/* Main Fridge Container - Opened Door View */}
         <div 
-          className="relative animate-slide-up"
+          className="relative animate-spring-up"
         >
           {/* Fridge exterior frame */}
           <div className="bg-gradient-to-b from-slate-200 to-slate-300 rounded-[2rem] p-2 shadow-xl">
@@ -649,7 +649,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
 
         {/* Pantry Cabinet - Modern design with search */}
         <div
-          className="mt-4 relative animate-slide-up"
+          className="mt-4 relative animate-spring-up"
         >
           {/* Cabinet exterior - light wooden frame */}
           <div className="bg-gradient-to-b from-amber-100 to-amber-200 rounded-2xl p-3 shadow-xl border border-amber-300">

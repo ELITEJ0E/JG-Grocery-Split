@@ -137,7 +137,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
                 return (
                   <div
                     key={item.id}
-                    className="bg-white p-4 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100/50 flex items-center gap-4 relative overflow-hidden group transition-transform duration-200 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300"
+                    className="bg-white p-4 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100/50 flex items-center gap-4 relative overflow-hidden group transition-transform duration-200 hover:scale-[1.01] animate-spring-up"
                   >
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-[#4ADE80] to-[#38BDF8] opacity-50"></div>
                     

@@ -261,7 +261,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         {showAddForm && (
           <form
             onSubmit={handleAddItem}
-            className="bg-white p-5 rounded-3xl shadow-md border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white p-5 rounded-3xl shadow-md border border-slate-100 overflow-hidden animate-spring-scale"
           >
               <h3 className="font-bold text-slate-800 mb-4 text-lg">Add New Item</h3>
               <div className="space-y-4">
@@ -356,7 +356,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       {itemsInCategory.map(item => (
                         <div 
                           key={item.id} 
-                          className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors group animate-spring-up"
                         >
                           <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => handleTogglePurchased(item)}>
                             <div className="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-hover:border-[#38BDF8] transition-colors">
@@ -392,7 +392,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               {purchasedItems.map(item => (
                 <div 
                   key={item.id} 
-                  className="flex items-center justify-between p-4 opacity-60 hover:opacity-100 transition-opacity animate-in fade-in slide-in-from-top-2 duration-300"
+                  className="flex items-center justify-between p-4 opacity-60 hover:opacity-100 transition-opacity animate-fade-in"
                 >
                   <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleTogglePurchased(item)}>
                     <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm">
@@ -423,8 +423,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
       {/* Purchased Action Prompt Modal */}
       {showPurchasedPrompt && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-6 animate-fade-in">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-spring-up">
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 mb-6 mx-auto">
                 <Check size={32} strokeWidth={3} />
               </div>

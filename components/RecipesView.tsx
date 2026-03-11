@@ -140,7 +140,7 @@ const RecipesView: React.FC<RecipesViewProps> = ({ recipes, onAddRecipe, onUpdat
             {filteredRecipes.map(recipe => (
               <div
                 key={recipe.id}
-                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 animate-spring-up"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -181,7 +181,7 @@ const RecipesView: React.FC<RecipesViewProps> = ({ recipes, onAddRecipe, onUpdat
       {/* Edit Modal */}
       {isEditing && currentRecipe && (
         <div
-          className="fixed inset-0 bg-white z-50 flex flex-col animate-in slide-in-from-bottom duration-300"
+          className="fixed inset-0 bg-white z-50 flex flex-col animate-spring-up"
         >
             <div className="flex justify-between items-center p-4 border-b border-gray-100">
               <h2 className="text-xl font-bold">{currentRecipe.id ? 'Edit Recipe' : 'New Recipe'}</h2>
