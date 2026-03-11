@@ -47,8 +47,8 @@ const InstallPrompt: React.FC = () => {
   return (
     <div className="fixed bottom-24 left-4 right-4 z-[60] animate-spring-up">
       <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 p-5 flex items-center gap-4">
-        {/* App Logo - using android-chrome-192x192.png */}
-        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200 shrink-0 overflow-hidden">
+        {/* App Logo - transparent background with border outline */}
+        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shrink-0 overflow-hidden border-2 border-emerald-200 shadow-sm">
           <img 
             src="/android-chrome-192x192.png"
             alt="JG Groceries Logo"
