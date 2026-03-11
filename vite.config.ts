@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
       allowedHosts: [
-        'jg-grocery-split.onrender.com'
+        'jg-grocery.onrender.com'
       ]
     },
     plugins: [react()],
