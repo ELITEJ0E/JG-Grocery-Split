@@ -41,7 +41,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
 
   return (
     <div className="flex flex-col h-full pb-28 relative">
-      <div className="bg-white/60 backdrop-blur-xl px-6 pt-8 pb-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl">
+      <div className="bg-white/60 backdrop-blur-xl px-6 pt-8 pb-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl animate-fade-in">
         <h1 className="text-3xl font-extrabold text-[#1E293B] mb-5 tracking-tight">My Pantry 📦</h1>
         
         <div className="relative mb-5">

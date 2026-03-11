@@ -9,6 +9,7 @@ export interface InventoryItem {
   category: Category;
   purchaseDate: string; // ISO string
   expiryDate: string; // ISO string
+  shelfLifeDays?: number;
   assignedDishId?: string;
   isUsed: boolean;
   isWasted: boolean;

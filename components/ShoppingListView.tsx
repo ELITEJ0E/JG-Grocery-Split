@@ -6,6 +6,8 @@ import { differenceInDays } from 'date-fns';
 import { getCategoryEmoji } from '../utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
+import Sheet from './ui/Sheet';
+
 interface ShoppingListViewProps {
   inventory: InventoryItem[];
   recipes: Recipe[];
@@ -421,53 +423,56 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         </div>
       </div>
 
-      {/* Purchased Action Prompt Modal */}
-      {showPurchasedPrompt && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-6 animate-fade-in">
-          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-spring-up">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 mb-6 mx-auto">
-                <Check size={32} strokeWidth={3} />
+      {/* Purchased Action Prompt Sheet */}
+      <Sheet
+        isOpen={!!showPurchasedPrompt}
+        onClose={() => setShowPurchasedPrompt(null)}
+        title="Got it!"
+      >
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 mb-6">
+            <Check size={32} strokeWidth={3} />
+          </div>
+          <p className="text-slate-500 mb-8 text-center font-medium">
+            How would you like to add <span className="font-bold text-slate-800 capitalize">{showPurchasedPrompt?.name}</span> to your inventory?
+          </p>
+          
+          <div className="space-y-3 w-full">
+            <button 
+              onClick={() => handleConfirmPurchaseAction('scan')}
+              className="w-full flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-4 rounded-2xl hover:shadow-md transition-all text-left group"
+            >
+              <div className="bg-white p-3 rounded-xl text-emerald-500 shadow-sm group-hover:scale-110 transition-transform">
+                <Camera size={22} />
               </div>
-              <h3 className="text-2xl font-extrabold text-slate-800 mb-2 text-center">Got it!</h3>
-              <p className="text-slate-500 mb-8 text-center font-medium">How would you like to add <span className="font-bold text-slate-800 capitalize">{showPurchasedPrompt.name}</span> to your inventory?</p>
-              
-              <div className="space-y-3">
-                <button 
-                  onClick={() => handleConfirmPurchaseAction('scan')}
-                  className="w-full flex items-center gap-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-4 rounded-2xl hover:shadow-md transition-all text-left group"
-                >
-                  <div className="bg-white p-3 rounded-xl text-emerald-500 shadow-sm group-hover:scale-110 transition-transform">
-                    <Camera size={22} />
-                  </div>
-                  <div>
-                    <p className="font-bold text-emerald-900 text-lg">Scan Receipt Later</p>
-                    <p className="text-xs font-medium text-emerald-600/80">I'll scan my receipt to add all items.</p>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => handleConfirmPurchaseAction('quick')}
-                  className="w-full flex items-center gap-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 p-4 rounded-2xl hover:shadow-md transition-all text-left group"
-                >
-                  <div className="bg-white p-3 rounded-xl text-blue-500 shadow-sm group-hover:scale-110 transition-transform">
-                    <PackagePlus size={22} />
-                  </div>
-                  <div>
-                    <p className="font-bold text-blue-900 text-lg">Quick Add Now</p>
-                    <p className="text-xs font-medium text-blue-600/80">Add directly with default expiry.</p>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => handleConfirmPurchaseAction('just_mark')}
-                  className="w-full text-center text-slate-400 font-bold py-3 hover:text-slate-600 transition-colors mt-2"
-                >
-                  Just mark as purchased
-                </button>
+              <div>
+                <p className="font-bold text-emerald-900 text-lg">Scan Receipt Later</p>
+                <p className="text-xs font-medium text-emerald-600/80">I'll scan my receipt to add all items.</p>
               </div>
+            </button>
+
+            <button 
+              onClick={() => handleConfirmPurchaseAction('quick')}
+              className="w-full flex items-center gap-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 p-4 rounded-2xl hover:shadow-md transition-all text-left group"
+            >
+              <div className="bg-white p-3 rounded-xl text-blue-500 shadow-sm group-hover:scale-110 transition-transform">
+                <PackagePlus size={22} />
+              </div>
+              <div>
+                <p className="font-bold text-blue-900 text-lg">Quick Add Now</p>
+                <p className="text-xs font-medium text-blue-600/80">Add directly with default expiry.</p>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => handleConfirmPurchaseAction('just_mark')}
+              className="w-full text-center text-slate-400 font-bold py-3 hover:text-slate-600 transition-colors mt-2"
+            >
+              Just mark as purchased
+            </button>
           </div>
         </div>
-      )}
+      </Sheet>
     </div>
   );
 };

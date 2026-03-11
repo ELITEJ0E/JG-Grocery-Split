@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Recipe, RecipeIngredient } from '../types';
-import { Search, Plus, Edit2, Trash2, Download, Upload, Star, X, Save } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Download, Upload, Star, X, Save, BookOpen } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface RecipesViewProps {

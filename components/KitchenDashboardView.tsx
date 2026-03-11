@@ -87,6 +87,8 @@ const getItemEmoji = (item: InventoryItem): string => {
   return getCategoryEmoji(item.category);
 };
 
+import Sheet from './ui/Sheet';
+
 interface ItemCardProps {
   item: InventoryItem;
   onUpdate: (item: InventoryItem) => void;
@@ -144,90 +146,75 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, isShelf =
         </div>
       </div>
 
-      {expanded && (
-        <div
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end justify-center p-4 animate-fade-in"
-          onClick={() => setExpanded(false)}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl animate-spring-up"
-          >
-            <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="text-4xl w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-inner">
-                    {emoji}
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-800 text-xl capitalize mb-1">{item.name}</h3>
-                    <div className={clsx("inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl", expiry.badge)}>
-                      <div className={clsx("w-1.5 h-1.5 rounded-full", expiry.dot)}></div>
-                      {expiry.label}
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setExpanded(false)} 
-                  className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="bg-slate-50 rounded-2xl p-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-700">Quantity</span>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation(); // Add this line
-                        if (item.quantity > 0) onUpdate({ ...item, quantity: Math.max(0, item.quantity - 1) });
-                      }}
-                      className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors"
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <span className="font-extrabold text-slate-800 min-w-[60px] text-center">
-                      {item.quantity} {item.unit}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation(); // Add this line
-                        if (item.quantity < 999) onUpdate({ ...item, quantity: Math.min(999, item.quantity + 1) });
-                      }}
-                      className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors"
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation(); // Add this line
-                    onUpdate({ ...item, isUsed: true }); 
-                    setExpanded(false); 
-                  }}
-                  className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-95"
-                >
-                  <Check size={18} strokeWidth={3} /> Mark as Used
-                </button>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation(); // Add this line
-                    onDelete(item.id); 
-                    setExpanded(false); 
-                  }}
-                  className="w-full bg-rose-50 text-rose-600 border border-rose-100 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-100 transition-all active:scale-95"
-                >
-                  Remove Item
-                </button>
-              </div>
+      <Sheet
+        isOpen={expanded}
+        onClose={() => setExpanded(false)}
+      >
+        <div className="flex items-center gap-4 mb-6">
+          <div className="text-4xl w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-inner">
+            {emoji}
+          </div>
+          <div>
+            <h3 className="font-extrabold text-slate-800 text-xl capitalize mb-1">{item.name}</h3>
+            <div className={clsx("inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl", expiry.badge)}>
+              <div className={clsx("w-1.5 h-1.5 rounded-full", expiry.dot)}></div>
+              {expiry.label}
             </div>
           </div>
-        )}
+        </div>
+
+        <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-700">Quantity</span>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (item.quantity > 0) onUpdate({ ...item, quantity: Math.max(0, item.quantity - 1) });
+                }}
+                className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="font-extrabold text-slate-800 min-w-[60px] text-center">
+                {item.quantity} {item.unit}
+              </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (item.quantity < 999) onUpdate({ ...item, quantity: Math.min(999, item.quantity + 1) });
+                }}
+                className="w-8 h-8 bg-white rounded-full border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={(e) => { 
+              e.stopPropagation();
+              onUpdate({ ...item, isUsed: true }); 
+              setExpanded(false); 
+            }}
+            className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-95"
+          >
+            <Check size={18} strokeWidth={3} /> Mark as Used
+          </button>
+          <button
+            onClick={(e) => { 
+              e.stopPropagation();
+              onDelete(item.id); 
+              setExpanded(false); 
+            }}
+            className="w-full bg-rose-50 text-rose-600 border border-rose-100 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-100 transition-all active:scale-95"
+          >
+            Remove Item
+          </button>
+        </div>
+      </Sheet>
     </>
   );
 };
@@ -693,11 +680,12 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
 
               {/* Cabinet shelves with categories */}
               {Object.entries(groupedPantryItems).map(([category, items]) => {
-                if (items.length === 0 && category !== 'Other') return null;
+                const pantryItems = items as InventoryItem[];
+                if (pantryItems.length === 0 && category !== 'Other') return null;
                 
                 // Split items into two columns for display
-                const leftItems = items.filter((_, i) => i % 2 === 0);
-                const rightItems = items.filter((_, i) => i % 2 === 1);
+                const leftItems = pantryItems.filter((_, i) => i % 2 === 0);
+                const rightItems = pantryItems.filter((_, i) => i % 2 === 1);
 
                 return (
                   <div key={category} className="mb-5 last:mb-0">
@@ -705,7 +693,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
                       <span className="text-sm font-bold text-amber-800">{category}</span>
-                      <span className="text-xs text-amber-500 ml-auto">{items.length} items</span>
+                      <span className="text-xs text-amber-500 ml-auto">{pantryItems.length} items</span>
                     </div>
 
                     {/* Category items grid */}
@@ -725,7 +713,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                     </div>
 
                     {/* Shelf line - only if not last category */}
-                    {category !== 'Other' && items.length > 0 && (
+                    {category !== 'Other' && pantryItems.length > 0 && (
                       <div className="relative h-4 mb-2">
                         <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-300 to-transparent"></div>
                         <div className="absolute left-1/2 -translate-x-1/2 -top-1 w-12 h-2 bg-amber-200/50 rounded-full"></div>

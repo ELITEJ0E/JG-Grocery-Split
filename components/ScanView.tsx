@@ -128,7 +128,7 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
   }
 
   return (
-    <div className="flex flex-col h-full pb-24 relative">
+    <div className="flex flex-col h-full pb-24 relative animate-fade-in">
       <div className="bg-white/60 backdrop-blur-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl">
         <h1 className="text-3xl font-extrabold text-[#1E293B] mb-2 tracking-tight">Add Items 🪄</h1>
         <p className="text-slate-500 text-sm font-medium">How would you like to add your groceries?</p>
@@ -147,7 +147,8 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
         <div className="flex flex-col gap-4 max-w-sm mx-auto w-full pb-8">
           <button
             onClick={() => setActiveScanner('camera')}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-[#4ADE80]/30 hover:shadow-[0_8px_25px_rgba(74,222,128,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-[#4ADE80]/30 hover:shadow-[0_8px_25px_rgba(74,222,128,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left animate-spring-up"
+            style={{ animationDelay: '0.1s' }}
           >
             <div className="w-16 h-16 bg-gradient-to-br from-[#4ADE80]/10 to-[#38BDF8]/10 rounded-2xl flex items-center justify-center group-hover:from-[#4ADE80]/20 group-hover:to-[#38BDF8]/20 transition-colors flex-shrink-0 shadow-inner">
               <Camera size={28} className="text-[#4ADE80]" strokeWidth={2.5} />
@@ -160,7 +161,8 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
 
           <button
             onClick={() => setActiveScanner('product')}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-rose-400/30 hover:shadow-[0_8px_25px_rgba(244,63,94,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-rose-400/30 hover:shadow-[0_8px_25px_rgba(244,63,94,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left animate-spring-up"
+            style={{ animationDelay: '0.2s' }}
           >
             <div className="w-16 h-16 bg-gradient-to-br from-rose-400/10 to-pink-500/10 rounded-2xl flex items-center justify-center group-hover:from-rose-400/20 group-hover:to-pink-500/20 transition-colors flex-shrink-0 shadow-inner">
               <Camera size={28} className="text-rose-500" strokeWidth={2.5} />
@@ -173,7 +175,8 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
 
           <button
             onClick={() => setActiveScanner('barcode')}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-[#38BDF8]/30 hover:shadow-[0_8px_25px_rgba(56,189,248,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-[#38BDF8]/30 hover:shadow-[0_8px_25px_rgba(56,189,248,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left animate-spring-up"
+            style={{ animationDelay: '0.3s' }}
           >
             <div className="w-16 h-16 bg-gradient-to-br from-[#38BDF8]/10 to-indigo-500/10 rounded-2xl flex items-center justify-center group-hover:from-[#38BDF8]/20 group-hover:to-indigo-500/20 transition-colors flex-shrink-0 shadow-inner">
               <Barcode size={28} className="text-[#38BDF8]" strokeWidth={2.5} />
@@ -186,7 +189,8 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-purple-400/30 hover:shadow-[0_8px_25px_rgba(168,85,247,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-purple-400/30 hover:shadow-[0_8px_25px_rgba(168,85,247,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left animate-spring-up"
+            style={{ animationDelay: '0.4s' }}
           >
             <div className="w-16 h-16 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-2xl flex items-center justify-center group-hover:from-purple-400/20 group-hover:to-pink-400/20 transition-colors flex-shrink-0 shadow-inner">
               <Upload size={28} className="text-purple-500" strokeWidth={2.5} />
@@ -199,7 +203,8 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
 
           <button
             onClick={handleManualEntry}
-            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-orange-400/30 hover:shadow-[0_8px_25px_rgba(251,146,60,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left"
+            className="flex items-center gap-5 bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group hover:border-orange-400/30 hover:shadow-[0_8px_25px_rgba(251,146,60,0.1)] transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] w-full text-left animate-spring-up"
+            style={{ animationDelay: '0.5s' }}
           >
             <div className="w-16 h-16 bg-gradient-to-br from-orange-400/10 to-amber-400/10 rounded-2xl flex items-center justify-center group-hover:from-orange-400/20 group-hover:to-amber-400/20 transition-colors flex-shrink-0 shadow-inner">
               <Edit3 size={28} className="text-orange-500" strokeWidth={2.5} />

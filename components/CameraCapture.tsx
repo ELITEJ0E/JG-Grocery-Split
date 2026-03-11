@@ -60,7 +60,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onCancel, titl
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col">
+    <div className="fixed inset-0 bg-slate-900 z-[100] flex flex-col">
       <div className="flex justify-between items-center p-6 bg-gradient-to-b from-slate-900/90 to-transparent absolute top-0 w-full z-10">
         <h2 className="text-white font-extrabold text-xl drop-shadow-md tracking-tight">{title}</h2>
         <button 
@@ -111,7 +111,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onCancel, titl
         )}
       </div>
 
-      <div className="h-40 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent flex items-center justify-center pb-safe absolute bottom-0 w-full">
+      <div className="h-40 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent flex items-center justify-center pb-12 absolute bottom-0 w-full">
         <button 
           onClick={handleCapture}
           disabled={!!error}

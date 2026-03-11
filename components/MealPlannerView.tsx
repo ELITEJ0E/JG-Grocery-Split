@@ -5,6 +5,8 @@ import { format, addDays, parseISO, isSameDay } from 'date-fns';
 import { clsx } from 'clsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
+import Sheet from './ui/Sheet';
+
 interface MealPlannerViewProps {
   recipes: Recipe[];
   mealPlans: MealPlan[];
@@ -341,253 +343,236 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
         )}
       </div>
 
-      {/* Recipe Modal */}
-      {isRecipeModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] animate-spring-up">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="text-2xl font-extrabold text-slate-800">{editingRecipe ? 'Edit Recipe 📝' : 'New Recipe ✨'}</h3>
-                <button onClick={() => setIsRecipeModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors">
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="p-6 overflow-y-auto flex-1 space-y-5">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Recipe Name *</label>
-                  <input
-                    type="text"
-                    value={recipeForm.name || ''}
-                    onChange={(e) => setRecipeForm({ ...recipeForm, name: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
-                    placeholder="e.g., Avocado Toast"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
-                  <input
-                    type="text"
-                    value={recipeForm.category || ''}
-                    onChange={(e) => setRecipeForm({ ...recipeForm, category: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
-                    placeholder="e.g., Breakfast, Healthy"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="block text-sm font-bold text-slate-700">Ingredients *</label>
-                    <button 
-                      onClick={() => setRecipeForm({ ...recipeForm, ingredients: [...(recipeForm.ingredients || []), { name: '', quantity: 1, unit: 'pcs' }] })}
-                      className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-3 py-1.5 rounded-xl hover:bg-[#38BDF8]/20 transition-colors flex items-center gap-1"
-                    >
-                      <Plus size={14} /> Add Item
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {recipeForm.ingredients?.map((ing, idx) => (
-                      <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-2xl border border-slate-100">
-                        <input
-                          type="text"
-                          value={ing.name}
-                          onChange={(e) => {
-                            const newIngs = [...(recipeForm.ingredients || [])];
-                            newIngs[idx].name = e.target.value;
-                            setRecipeForm({ ...recipeForm, ingredients: newIngs });
-                          }}
-                          placeholder="Name"
-                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
-                        />
-                        <input
-                          type="number"
-                          value={ing.quantity}
-                          onChange={(e) => {
-                            const newIngs = [...(recipeForm.ingredients || [])];
-                            newIngs[idx].quantity = parseFloat(e.target.value);
-                            setRecipeForm({ ...recipeForm, ingredients: newIngs });
-                          }}
-                          className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
-                        />
-                        <input
-                          type="text"
-                          value={ing.unit}
-                          onChange={(e) => {
-                            const newIngs = [...(recipeForm.ingredients || [])];
-                            newIngs[idx].unit = e.target.value;
-                            setRecipeForm({ ...recipeForm, ingredients: newIngs });
-                          }}
-                          placeholder="Unit"
-                          className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
-                        />
-                        <button 
-                          onClick={() => {
-                            const newIngs = [...(recipeForm.ingredients || [])];
-                            newIngs.splice(idx, 1);
-                            setRecipeForm({ ...recipeForm, ingredients: newIngs });
-                          }}
-                          className="w-8 h-8 flex items-center justify-center text-slate-400 bg-white rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors shadow-sm"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                    {recipeForm.ingredients?.length === 0 && (
-                      <div className="text-center py-6 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
-                        <p className="text-sm text-slate-500 font-medium">No ingredients added yet.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Notes / Instructions</label>
-                  <textarea
-                    value={recipeForm.notes || ''}
-                    onChange={(e) => setRecipeForm({ ...recipeForm, notes: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800 min-h-[120px] resize-none"
-                    placeholder="Preparation steps..."
-                  />
-                </div>
-              </div>
-
-              <div className="p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-[2rem]">
-                <button
-                  onClick={handleSaveRecipe}
-                  className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 text-lg"
-                >
-                  Save Recipe
-                </button>
-              </div>
-            </div>
+      {/* Recipe Sheet */}
+      <Sheet
+        isOpen={isRecipeModalOpen}
+        onClose={() => setIsRecipeModalOpen(false)}
+        title={editingRecipe ? 'Edit Recipe 📝' : 'New Recipe ✨'}
+      >
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Recipe Name *</label>
+            <input
+              type="text"
+              value={recipeForm.name || ''}
+              onChange={(e) => setRecipeForm({ ...recipeForm, name: e.target.value })}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
+              placeholder="e.g., Avocado Toast"
+            />
           </div>
-        )}
-      {/* Plan Meal Modal */}
-      {isPlanModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] animate-spring-up">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="text-2xl font-extrabold text-slate-800">Plan Meal 📅</h3>
-                <button onClick={() => setIsPlanModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors">
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="p-6 overflow-y-auto flex-1 space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Select Recipe</label>
-                  <Select
-                    value={planForm.recipeId}
-                    onValueChange={(value) => {
-                      const recipe = recipes.find(r => r.id === value);
-                      setPlanForm({ 
-                        ...planForm, 
-                        recipeId: value,
-                        assignedItems: recipe ? recipe.ingredients.map((_, idx) => ({ ingredientIndex: idx, inventoryItemId: '', quantity: 0 })) : []
-                      });
+          
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
+            <input
+              type="text"
+              value={recipeForm.category || ''}
+              onChange={(e) => setRecipeForm({ ...recipeForm, category: e.target.value })}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
+              placeholder="e.g., Breakfast, Healthy"
+            />
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <label className="block text-sm font-bold text-slate-700">Ingredients *</label>
+              <button 
+                onClick={() => setRecipeForm({ ...recipeForm, ingredients: [...(recipeForm.ingredients || []), { name: '', quantity: 1, unit: 'pcs' }] })}
+                className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-3 py-1.5 rounded-xl hover:bg-[#38BDF8]/20 transition-colors flex items-center gap-1"
+              >
+                <Plus size={14} /> Add Item
+              </button>
+            </div>
+            <div className="space-y-3">
+              {recipeForm.ingredients?.map((ing, idx) => (
+                <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                  <input
+                    type="text"
+                    value={ing.name}
+                    onChange={(e) => {
+                      const newIngs = [...(recipeForm.ingredients || [])];
+                      newIngs[idx].name = e.target.value;
+                      setRecipeForm({ ...recipeForm, ingredients: newIngs });
                     }}
+                    placeholder="Name"
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
+                  />
+                  <input
+                    type="number"
+                    value={ing.quantity}
+                    onChange={(e) => {
+                      const newIngs = [...(recipeForm.ingredients || [])];
+                      newIngs[idx].quantity = parseFloat(e.target.value);
+                      setRecipeForm({ ...recipeForm, ingredients: newIngs });
+                    }}
+                    className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
+                  />
+                  <input
+                    type="text"
+                    value={ing.unit}
+                    onChange={(e) => {
+                      const newIngs = [...(recipeForm.ingredients || [])];
+                      newIngs[idx].unit = e.target.value;
+                      setRecipeForm({ ...recipeForm, ingredients: newIngs });
+                    }}
+                    placeholder="Unit"
+                    className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
+                  />
+                  <button 
+                    onClick={() => {
+                      const newIngs = [...(recipeForm.ingredients || [])];
+                      newIngs.splice(idx, 1);
+                      setRecipeForm({ ...recipeForm, ingredients: newIngs });
+                    }}
+                    className="w-8 h-8 flex items-center justify-center text-slate-400 bg-white rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors shadow-sm"
                   >
-                    <SelectTrigger className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800 h-auto">
-                      <SelectValue placeholder="-- Choose a recipe --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {recipes.map(r => (
-                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <X size={16} />
+                  </button>
                 </div>
-
-                {planForm.recipeId && (
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800 mb-3">Assign Inventory Items</h4>
-                    <div className="space-y-3">
-                      {recipes.find(r => r.id === planForm.recipeId)?.ingredients.map((ing, idx) => {
-                        const assignment = planForm.assignedItems.find(a => a.ingredientIndex === idx);
-                        const activeInventory = inventory.filter(i => !i.isUsed && !i.isWasted);
-                        
-                        return (
-                          <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="font-bold text-slate-800">{ing.name}</span>
-                              <span className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-1 rounded-lg">{ing.quantity} {ing.unit} needed</span>
-                            </div>
-                            <div className="flex gap-2">
-                              <div className="flex-1">
-                                <Select
-                                  value={assignment?.inventoryItemId || ''}
-                                  onValueChange={(value) => {
-                                    const newAssignments = [...planForm.assignedItems];
-                                    const aIdx = newAssignments.findIndex(a => a.ingredientIndex === idx);
-                                    if (aIdx >= 0) {
-                                      newAssignments[aIdx].inventoryItemId = value;
-                                      // Auto-fill quantity if an item is selected
-                                      if (value) {
-                                        const invItem = inventory.find(i => i.id === value);
-                                        newAssignments[aIdx].quantity = Math.min(ing.quantity, invItem?.quantity || 0);
-                                      } else {
-                                        newAssignments[aIdx].quantity = 0;
-                                      }
-                                    }
-                                    setPlanForm({ ...planForm, assignedItems: newAssignments });
-                                  }}
-                                >
-                                  <SelectTrigger className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#4ADE80] font-medium h-auto">
-                                    <SelectValue placeholder="-- Select Inventory --" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {activeInventory.map(item => (
-                                      <SelectItem key={item.id} value={item.id}>
-                                        {item.name} ({item.quantity} {item.unit} avail)
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              {assignment?.inventoryItemId && (
-                                <input
-                                  type="number"
-                                  min="0.1"
-                                  step="0.1"
-                                  value={assignment.quantity || ''}
-                                  onChange={(e) => {
-                                    const newAssignments = [...planForm.assignedItems];
-                                    const aIdx = newAssignments.findIndex(a => a.ingredientIndex === idx);
-                                    if (aIdx >= 0) {
-                                      newAssignments[aIdx].quantity = parseFloat(e.target.value) || 0;
-                                    }
-                                    setPlanForm({ ...planForm, assignedItems: newAssignments });
-                                  }}
-                                  className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#4ADE80] font-medium"
-                                  placeholder="Qty"
-                                />
-                              )}
-                            </div>
-                            {assignment?.inventoryItemId && assignment.quantity > (inventory.find(i => i.id === assignment.inventoryItemId)?.quantity || 0) && (
-                              <p className="text-xs font-bold text-rose-500 mt-2 flex items-center gap-1 bg-rose-50 p-2 rounded-lg">
-                                <AlertCircle size={14} /> Exceeds available stock!
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-[2rem]">
-                <button
-                  onClick={handleSaveMealPlan}
-                  disabled={!planForm.recipeId}
-                  className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-                >
-                  Save to Plan
-                </button>
-              </div>
+              ))}
+              {recipeForm.ingredients?.length === 0 && (
+                <div className="text-center py-6 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
+                  <p className="text-sm text-slate-500 font-medium">No ingredients added yet.</p>
+                </div>
+              )}
             </div>
           </div>
-        )}
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Notes / Instructions</label>
+            <textarea
+              value={recipeForm.notes || ''}
+              onChange={(e) => setRecipeForm({ ...recipeForm, notes: e.target.value })}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800 min-h-[120px] resize-none"
+              placeholder="Preparation steps..."
+            />
+          </div>
+          
+          <button
+            onClick={handleSaveRecipe}
+            className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 text-lg"
+          >
+            Save Recipe
+          </button>
+        </div>
+      </Sheet>
+
+      {/* Plan Meal Sheet */}
+      <Sheet
+        isOpen={isPlanModalOpen}
+        onClose={() => setIsPlanModalOpen(false)}
+        title="Plan Meal 📅"
+      >
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Select Recipe</label>
+            <Select
+              value={planForm.recipeId}
+              onValueChange={(value) => {
+                const recipe = recipes.find(r => r.id === value);
+                setPlanForm({ 
+                  ...planForm, 
+                  recipeId: value,
+                  assignedItems: recipe ? recipe.ingredients.map((_, idx) => ({ ingredientIndex: idx, inventoryItemId: '', quantity: 0 })) : []
+                });
+              }}
+            >
+              <SelectTrigger className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800 h-auto">
+                <SelectValue placeholder="-- Choose a recipe --" />
+              </SelectTrigger>
+              <SelectContent>
+                {recipes.map(r => (
+                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {planForm.recipeId && (
+            <div>
+              <h4 className="text-sm font-bold text-slate-800 mb-3">Assign Inventory Items</h4>
+              <div className="space-y-3">
+                {recipes.find(r => r.id === planForm.recipeId)?.ingredients.map((ing, idx) => {
+                  const assignment = planForm.assignedItems.find(a => a.ingredientIndex === idx);
+                  const activeInventory = inventory.filter(i => !i.isUsed && !i.isWasted);
+                  
+                  return (
+                    <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="font-bold text-slate-800">{ing.name}</span>
+                        <span className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-1 rounded-lg">{ing.quantity} {ing.unit} needed</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <Select
+                            value={assignment?.inventoryItemId || ''}
+                            onValueChange={(value) => {
+                              const newAssignments = [...planForm.assignedItems];
+                              const aIdx = newAssignments.findIndex(a => a.ingredientIndex === idx);
+                              if (aIdx >= 0) {
+                                newAssignments[aIdx].inventoryItemId = value;
+                                // Auto-fill quantity if an item is selected
+                                if (value) {
+                                  const invItem = inventory.find(i => i.id === value);
+                                  newAssignments[aIdx].quantity = Math.min(ing.quantity, invItem?.quantity || 0);
+                                } else {
+                                  newAssignments[aIdx].quantity = 0;
+                                }
+                              }
+                              setPlanForm({ ...planForm, assignedItems: newAssignments });
+                            }}
+                          >
+                            <SelectTrigger className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#4ADE80] font-medium h-auto">
+                              <SelectValue placeholder="-- Select Inventory --" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {activeInventory.map(item => (
+                                <SelectItem key={item.id} value={item.id}>
+                                  {item.name} ({item.quantity} {item.unit} avail)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {assignment?.inventoryItemId && (
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value={assignment.quantity || ''}
+                            onChange={(e) => {
+                              const newAssignments = [...planForm.assignedItems];
+                              const aIdx = newAssignments.findIndex(a => a.ingredientIndex === idx);
+                              if (aIdx >= 0) {
+                                newAssignments[aIdx].quantity = parseFloat(e.target.value) || 0;
+                              }
+                              setPlanForm({ ...planForm, assignedItems: newAssignments });
+                            }}
+                            className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#4ADE80] font-medium"
+                            placeholder="Qty"
+                          />
+                        )}
+                      </div>
+                      {assignment?.inventoryItemId && assignment.quantity > (inventory.find(i => i.id === assignment.inventoryItemId)?.quantity || 0) && (
+                        <p className="text-xs font-bold text-rose-500 mt-2 flex items-center gap-1 bg-rose-50 p-2 rounded-lg">
+                          <AlertCircle size={14} /> Exceeds available stock!
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          <button
+            onClick={handleSaveMealPlan}
+            disabled={!planForm.recipeId}
+            className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+          >
+            Save to Plan
+          </button>
+        </div>
+      </Sheet>
     </div>
   );
 };
