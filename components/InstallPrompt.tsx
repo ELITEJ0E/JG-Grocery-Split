@@ -47,12 +47,17 @@ const InstallPrompt: React.FC = () => {
   return (
     <div className="fixed bottom-24 left-4 right-4 z-[60] animate-spring-up">
       <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 p-5 flex items-center gap-4">
-        <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200 shrink-0">
-          <Smartphone size={24} />
+        {/* App Logo - using android-chrome-192x192.png */}
+        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200 shrink-0 overflow-hidden">
+          <img 
+            src="/android-chrome-192x192.png"
+            alt="JG Groceries Logo"
+            className="w-10 h-10 object-contain"
+          />
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-slate-800 truncate">Install Groceries</h3>
+          <h3 className="text-sm font-bold text-slate-800 truncate">Install JG Groceries</h3>
           <p className="text-xs text-slate-500">Add to home screen for quick access</p>
         </div>
 

@@ -74,12 +74,25 @@ const LoadingScreen: React.FC = () => {
           </p>
         </div>
 
-        {/* Loading Bar with Shopping Cart */}
+        {/* Loading Bar with JG Shopping Cart */}
         <div className="mt-12 w-72 relative animate-fade-slide-up" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
-          {/* Shopping Cart that moves across */}
-          <div className="absolute -top-8 left-0 w-full animate-cart-move">
-            <div className="relative inline-block">
-              🛒
+          {/* Shopping Cart Track Area - Cart positioned above */}
+          <div className="relative mb-8">
+            {/* JG Shopping Cart that moves across */}
+            <div className="absolute left-0 w-full animate-cart-move" style={{ top: '-30px' }}>
+              <div className="relative inline-block">
+                {/* JG Cart PNG Image - made larger */}
+                <img 
+                  src="/jg-cart.png"
+                  alt="JG Shopping Cart"
+                  className="w-20 h-20 object-contain transform -translate-x-1/2 animate-cart-wobble"
+                  style={{
+                    filter: 'drop-shadow(0 8px 12px rgba(16, 185, 129, 0.3))'
+                  }}
+                />
+                {/* Enhanced wheel shadow */}
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-2 bg-emerald-900/20 rounded-full blur-md"></div>
+              </div>
             </div>
           </div>
 
@@ -115,7 +128,7 @@ const LoadingScreen: React.FC = () => {
         </div>
 
         {/* Loading message */}
-        <p className="text-xs text-slate-400 mt-10 animate-pulse-slow">
+        <p className="text-xs text-slate-400 mt-12 animate-pulse-slow">
           loading your smart pantry...
         </p>
       </div>
@@ -207,17 +220,26 @@ const styles = `
   }
 
   @keyframes cart-move {
-    0% { transform: translateX(-10%); opacity: 0; }
+    0% { transform: translateX(-15%); opacity: 0; }
     10% { transform: translateX(-5%); opacity: 1; }
     20% { transform: translateX(15%); }
     40% { transform: translateX(35%); }
     60% { transform: translateX(55%); }
     80% { transform: translateX(75%); }
     90% { transform: translateX(90%); opacity: 1; }
-    100% { transform: translateX(105%); opacity: 0; }
+    100% { transform: translateX(115%); opacity: 0; }
   }
   .animate-cart-move {
     animation: cart-move 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes cart-wobble {
+    0%, 100% { transform: translateX(-50%) rotate(0deg); }
+    25% { transform: translateX(-50%) rotate(-4deg); }
+    75% { transform: translateX(-50%) rotate(4deg); }
+  }
+  .animate-cart-wobble {
+    animation: cart-wobble 0.4s ease-in-out infinite;
   }
 
   @keyframes fade-slide-up {
