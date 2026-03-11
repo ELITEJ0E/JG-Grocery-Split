@@ -9,6 +9,7 @@ import ScanView from './components/ScanView';
 import VerificationView from './components/VerificationView';
 import KitchenDashboardView from './components/KitchenDashboardView';
 import InstallPrompt from './components/InstallPrompt';
+import LoadingScreen from './components/LoadingScreen';
 import { addDays } from 'date-fns';
 
 const App: React.FC = () => {
@@ -178,6 +179,7 @@ const App: React.FC = () => {
     <div className="max-w-md mx-auto min-h-screen shadow-2xl overflow-hidden relative font-sans text-[#1E293B]"
       style={{ background: 'linear-gradient(160deg, #f0fdf4 0%, #e0f7fa 50%, #ecfeff 100%)' }}
     >
+      <LoadingScreen />
       {renderContent()}
       {!isVerifying && <InstallPrompt />}
       {!isVerifying && <BottomNav currentView={view} onNavigate={setView} />}
