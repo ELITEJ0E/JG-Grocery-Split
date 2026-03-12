@@ -3,7 +3,7 @@ import { InventoryItem } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const parseReceiptImage = async (base64Image: string): Promise<{ items: Partial<InventoryItem>[], purchaseDate: string }> => {
+export const parseReceiptImage = async (base64Image: string): Promise<{ items: Partial<InventoryItem>[], purchaseDate: string, store?: string }> => {
   // Strip the data:image/jpeg;base64, prefix if present
   const base64Data = base64Image.split(',')[1] || base64Image;
   const mimeType = base64Image.split(';')[0].split(':')[1] || "image/jpeg";
@@ -30,6 +30,7 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ items: P
             - shelfLifeDays (estimated shelf life in days based on the category and item type)
             
             Also extract the purchaseDate if available (YYYY-MM-DD), otherwise use today's date.
+            Extract the store name if visible on the receipt.
             `
           }
         ]
@@ -40,6 +41,7 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ items: P
           type: Type.OBJECT,
           properties: {
             purchaseDate: { type: Type.STRING },
+            store: { type: Type.STRING },
             items: {
               type: Type.ARRAY,
               items: {
@@ -70,7 +72,8 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ items: P
     
     return {
       items: data.items || [],
-      purchaseDate: data.purchaseDate || new Date().toISOString().split('T')[0]
+      purchaseDate: data.purchaseDate || new Date().toISOString().split('T')[0],
+      store: data.store
     };
 
   } catch (error) {

@@ -28,10 +28,14 @@ const Sheet: React.FC<SheetProps> = ({
     } else {
       const timer = setTimeout(() => {
         setShouldRender(false);
-        document.body.style.overflow = 'unset';
+        document.body.style.removeProperty('overflow');
       }, 300);
       return () => clearTimeout(timer);
     }
+    
+    return () => {
+      document.body.style.removeProperty('overflow');
+    };
   }, [isOpen]);
 
   if (!shouldRender) return null;

@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { InventoryItem, Recipe, MealPlan, ShoppingListItem, Category } from '../types';
-import { Plus, Search, Trash2, CheckCircle2, Circle, Download, Upload, AlertCircle, ChevronDown, PackagePlus, Camera, Check } from 'lucide-react';
+import { Plus, Search, Trash2, CheckCircle2, Circle, Download, Upload, AlertCircle, ChevronDown, PackagePlus, Camera, Check, FileText, Copy, ClipboardPaste } from 'lucide-react';
 import { clsx } from 'clsx';
 import { differenceInDays } from 'date-fns';
 import { getCategoryEmoji } from '../utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { exportShoppingListToText, parseShoppingListFromText } from '../importExportUtils';
 
 import Sheet from './ui/Sheet';
 
@@ -34,6 +35,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const [newItemCategory, setNewItemCategory] = useState<Category>('other');
   const [newItemQuantity, setNewItemQuantity] = useState('1');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isTextImportExportOpen, setIsTextImportExportOpen] = useState(false);
+  const [textData, setTextData] = useState('');
   const [showPurchasedPrompt, setShowPurchasedPrompt] = useState<ShoppingListItem | null>(null);
 
   // Generate suggestions based on inventory and meal plans
@@ -216,6 +219,35 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       };
       reader.readAsText(file);
     }
+  };
+
+  const handleTextExport = () => {
+    const text = exportShoppingListToText(shoppingList);
+    setTextData(text);
+    setIsTextImportExportOpen(true);
+  };
+
+  const handleTextImport = () => {
+    const imported = parseShoppingListFromText(textData);
+    if (imported.length === 0) return alert('No valid items found in text.');
+    
+    const newItems: ShoppingListItem[] = imported.map(item => ({
+      id: crypto.randomUUID(),
+      name: item.name || 'Unnamed Item',
+      category: item.category || 'other',
+      quantity: item.quantity || '1',
+      purchased: item.purchased || false
+    }));
+    
+    onUpdateShoppingList([...shoppingList, ...newItems]);
+    alert(`Imported ${newItems.length} items successfully.`);
+    setIsTextImportExportOpen(false);
+    setTextData('');
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(textData);
+    alert('Copied to clipboard!');
   };
 
   const filteredList = shoppingList.filter(item => 
@@ -412,16 +444,54 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         )}
 
         {/* Export/Import */}
-        <div className="flex gap-3 pt-6 border-t border-slate-200/60">
-          <button onClick={handleExport} className="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-2xl text-sm hover:bg-slate-50 shadow-sm transition-all active:scale-95">
-            <Download size={18} /> Export
+        <div className="flex flex-wrap gap-3 pt-6 border-t border-slate-200/60">
+          <button onClick={handleExport} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-2xl text-xs hover:bg-slate-50 shadow-sm transition-all active:scale-95">
+            <Download size={16} /> JSON Export
           </button>
-          <label className="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-2xl text-sm hover:bg-slate-50 cursor-pointer shadow-sm transition-all active:scale-95">
-            <Upload size={18} /> Import
+          <label className="flex-1 min-w-[100px] flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-2xl text-xs hover:bg-slate-50 cursor-pointer shadow-sm transition-all active:scale-95">
+            <Upload size={16} /> JSON Import
             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
           </label>
+          <button onClick={handleTextExport} className="w-full bg-white border border-slate-100 text-[#38BDF8] py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
+            <FileText size={18} /> WhatsApp / Notes Format
+          </button>
         </div>
       </div>
+
+      {/* Text Import/Export Sheet */}
+      <Sheet
+        isOpen={isTextImportExportOpen}
+        onClose={() => setIsTextImportExportOpen(false)}
+        title="WhatsApp / Notes Format 📝"
+      >
+        <div className="space-y-5">
+          <p className="text-sm text-slate-500 font-medium">
+            Copy this text to share via WhatsApp/Notes, or paste text from your notes to import shopping items.
+          </p>
+          
+          <textarea
+            value={textData}
+            onChange={(e) => setTextData(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#38BDF8] focus:ring-4 focus:ring-[#38BDF8]/10 outline-none transition-all font-mono text-xs text-slate-800 min-h-[300px] resize-none"
+            placeholder="Paste shopping list text here..."
+          />
+          
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={copyToClipboard}
+              className="bg-white border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl shadow-sm hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Copy size={18} /> Copy All
+            </button>
+            <button
+              onClick={handleTextImport}
+              className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <ClipboardPaste size={18} /> Import Text
+            </button>
+          </div>
+        </div>
+      </Sheet>
 
       {/* Purchased Action Prompt Sheet */}
       <Sheet

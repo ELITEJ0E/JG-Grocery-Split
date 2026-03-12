@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { InventoryItem, Category } from '../types';
+import { InventoryItem, Category, Currency } from '../types';
 import { Check, X, Edit2, Trash2, Plus, PackageOpen } from 'lucide-react';
 import { addDays } from 'date-fns';
 import { getCategoryEmoji } from '../utils';
@@ -7,13 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 interface VerificationViewProps {
   items: Partial<InventoryItem>[];
+  currency: Currency;
   onConfirm: (items: InventoryItem[]) => void;
   onCancel: () => void;
 }
 
 const CATEGORIES: Category[] = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other'];
 
-const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems, onConfirm, onCancel }) => {
+const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems, currency, onConfirm, onCancel }) => {
   const [items, setItems] = useState<Partial<InventoryItem>[]>(initialItems);
 
   const handleUpdate = (index: number, field: keyof InventoryItem, value: any) => {
@@ -53,9 +54,21 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
         expiryDate: addDays(new Date(purchaseDate), shelfLife).toISOString(),
         isUsed: false,
         isWasted: false,
+        store: item.store,
       };
     });
     onConfirm(finalItems);
+  };
+
+  const subtotal = items.reduce((acc, item) => acc + ((item.unitPrice || 0) * (item.quantity || 0)), 0);
+
+  // Calculate dynamic padding based on currency symbol length
+  const getCurrencyPadding = () => {
+    const symbolLength = currency.symbol.length;
+    // Base padding of 2rem (32px) plus 0.5rem (8px) per additional character
+    // For RM (2 chars): pl-10 (2.5rem = 40px)
+    // For $ (1 char): pl-8 (2rem = 32px)
+    return symbolLength === 1 ? 'pl-8' : 'pl-12';
   };
 
   return (
@@ -65,9 +78,15 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
           <h1 className="text-3xl font-extrabold text-[#1E293B] tracking-tight mb-1">Verify Items 🧐</h1>
           <p className="text-sm font-medium text-slate-500">Check before adding to pantry</p>
         </div>
-        <button onClick={onCancel} className="p-2.5 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 transition-colors shadow-sm">
-          <X size={20} strokeWidth={3} />
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Subtotal</div>
+            <div className="text-xl font-black text-[#4ADE80] leading-none">{currency.symbol}{subtotal.toFixed(2)}</div>
+          </div>
+          <button onClick={onCancel} className="p-2 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 transition-colors shadow-sm">
+            <X size={18} strokeWidth={3} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-5">
@@ -122,12 +141,13 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                 <div>
                   <label className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mb-1.5 block">Price</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">{currency.symbol}</span>
                     <input
                       type="number"
                       value={item.unitPrice || ''}
                       onChange={(e) => handleUpdate(index, 'unitPrice', parseFloat(e.target.value))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-3 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all"
+                      className={`w-full bg-slate-50 border border-slate-200 rounded-xl ${getCurrencyPadding()} pr-3 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all`}
+                      style={{ paddingLeft: currency.symbol.length === 1 ? '2rem' : '2.5rem' }}
                     />
                   </div>
                 </div>
@@ -141,18 +161,18 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                       value={item.category || 'other'}
                       onValueChange={(value) => handleUpdate(index, 'category', value)}
                     >
-                      <SelectTrigger className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none capitalize transition-all h-auto">
+                      <SelectTrigger className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none capitalize transition-all h-auto">
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                       <SelectContent>
                         {CATEGORIES.map(cat => (
-                          <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
+                          <SelectItem key={cat} value={cat} className="capitalize">
+                            <span className="mr-2">{getCategoryEmoji(cat)}</span>
+                            {cat}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-                      {getCategoryEmoji(item.category as Category || 'other')}
-                    </div>
                   </div>
                 </div>
                 <div>
@@ -161,6 +181,18 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                     type="number"
                     value={item.shelfLifeDays || ''}
                     onChange={(e) => handleUpdate(index, 'shelfLifeDays', parseInt(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pl-2 mt-4">
+                <div className="col-span-2">
+                  <label className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mb-1.5 block">Store</label>
+                  <input
+                    type="text"
+                    value={item.store || ''}
+                    onChange={(e) => handleUpdate(index, 'store', e.target.value)}
+                    placeholder="Lotus, NSK, Tesco"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all"
                   />
                 </div>

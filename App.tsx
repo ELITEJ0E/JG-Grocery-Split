@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppState, InventoryItem, Recipe, MealPlan, ShoppingListItem } from './types';
+import { AppState, InventoryItem, Recipe, MealPlan, ShoppingListItem, PriceHistoryEntry, BudgetData, LifespanData, Currency, CURRENCIES } from './types';
 import BottomNav from './components/BottomNav';
 import InventoryView from './components/InventoryView';
 import MealPlannerView from './components/MealPlannerView';
@@ -10,7 +10,7 @@ import VerificationView from './components/VerificationView';
 import KitchenDashboardView from './components/KitchenDashboardView';
 import InstallPrompt from './components/InstallPrompt';
 import LoadingScreen from './components/LoadingScreen';
-import { addDays } from 'date-fns';
+import { addDays, format, differenceInDays } from 'date-fns';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppState>('kitchen');
@@ -20,17 +20,30 @@ const App: React.FC = () => {
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
   const [scannedItems, setScannedItems] = useState<Partial<InventoryItem>[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [currency, setCurrency] = useState<Currency>(CURRENCIES[0]);
+
+  const [priceHistory, setPriceHistory] = useState<Record<string, PriceHistoryEntry[]>>({});
+  const [budgetData, setBudgetData] = useState<BudgetData>({ monthlyBudget: 800, months: {} });
+  const [lifespanData, setLifespanData] = useState<LifespanData>({});
 
   useEffect(() => {
     const storedInventory = localStorage.getItem('grocery_inventory');
     const storedRecipes = localStorage.getItem('userRecipes');
     const storedMealPlans = localStorage.getItem('grocery_meal_plans');
     const storedShoppingList = localStorage.getItem('shoppingList');
+    const storedPriceHistory = localStorage.getItem('priceHistory');
+    const storedBudgetData = localStorage.getItem('budgetData');
+    const storedLifespanData = localStorage.getItem('lifespanData');
+    const storedCurrency = localStorage.getItem('currency');
 
     if (storedInventory) setInventory(JSON.parse(storedInventory));
     if (storedRecipes) setRecipes(JSON.parse(storedRecipes));
     if (storedMealPlans) setMealPlans(JSON.parse(storedMealPlans));
     if (storedShoppingList) setShoppingList(JSON.parse(storedShoppingList));
+    if (storedPriceHistory) setPriceHistory(JSON.parse(storedPriceHistory));
+    if (storedBudgetData) setBudgetData(JSON.parse(storedBudgetData));
+    if (storedLifespanData) setLifespanData(JSON.parse(storedLifespanData));
+    if (storedCurrency) setCurrency(JSON.parse(storedCurrency));
   }, []);
 
   useEffect(() => {
@@ -38,10 +51,30 @@ const App: React.FC = () => {
     localStorage.setItem('userRecipes', JSON.stringify(recipes));
     localStorage.setItem('grocery_meal_plans', JSON.stringify(mealPlans));
     localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
-  }, [inventory, recipes, mealPlans, shoppingList]);
+    localStorage.setItem('priceHistory', JSON.stringify(priceHistory));
+    localStorage.setItem('budgetData', JSON.stringify(budgetData));
+    localStorage.setItem('lifespanData', JSON.stringify(lifespanData));
+    localStorage.setItem('currency', JSON.stringify(currency));
+  }, [inventory, recipes, mealPlans, shoppingList, priceHistory, budgetData, lifespanData, currency]);
 
   const handleUpdateItem = (updatedItem: InventoryItem) => {
-    setInventory(inventory.map(item => item.id === updatedItem.id ? updatedItem : item));
+    setInventory(prev => {
+      const oldItem = prev.find(i => i.id === updatedItem.id);
+      if (oldItem && !oldItem.isUsed && updatedItem.isUsed && updatedItem.usedDate) {
+        // Calculate lifespan
+        const days = differenceInDays(new Date(updatedItem.usedDate), new Date(updatedItem.purchaseDate));
+        if (days >= 0) {
+          setLifespanData(prevLifespan => {
+            const name = updatedItem.name.toLowerCase();
+            const existing = prevLifespan[name] || { averageDays: 0, history: [] };
+            const newHistory = [...existing.history, days];
+            const newAverage = newHistory.reduce((a, b) => a + b, 0) / newHistory.length;
+            return { ...prevLifespan, [name]: { averageDays: Math.round(newAverage), history: newHistory } };
+          });
+        }
+      }
+      return prev.map(item => item.id === updatedItem.id ? updatedItem : item);
+    });
   };
 
   const handleDeleteItem = (id: string) => {
@@ -80,6 +113,43 @@ const App: React.FC = () => {
 
   const handleConfirmItems = (items: InventoryItem[]) => {
     setInventory([...inventory, ...items]);
+    
+    // Update price history
+    setPriceHistory(prev => {
+      const newHistory = { ...prev };
+      items.forEach(item => {
+        if (item.unitPrice > 0) {
+          const name = item.name.toLowerCase();
+          if (!newHistory[name]) newHistory[name] = [];
+          newHistory[name].push({
+            date: item.purchaseDate,
+            price: item.unitPrice,
+            store: item.store
+          });
+        }
+      });
+      return newHistory;
+    });
+
+    // Update budget data
+    setBudgetData(prev => {
+      const newData = { ...prev };
+      items.forEach(item => {
+        if (item.unitPrice > 0) {
+          const monthKey = format(new Date(item.purchaseDate), 'yyyy-MM');
+          if (!newData.months[monthKey]) {
+            newData.months[monthKey] = { totalSpent: 0, categories: {} };
+          }
+          const cost = item.unitPrice * item.quantity;
+          newData.months[monthKey].totalSpent += cost;
+          
+          const cat = item.category || 'other';
+          newData.months[monthKey].categories[cat] = (newData.months[monthKey].categories[cat] || 0) + cost;
+        }
+      });
+      return newData;
+    });
+
     setIsVerifying(false);
     setScannedItems([]);
     setView('kitchen');
@@ -106,6 +176,7 @@ const App: React.FC = () => {
       return (
         <VerificationView
           items={scannedItems}
+          currency={currency}
           onConfirm={handleConfirmItems}
           onCancel={() => {
             setIsVerifying(false);
@@ -148,7 +219,23 @@ const App: React.FC = () => {
       case 'scan':
         return <ScanView onItemsExtracted={handleItemsExtracted} onCancel={() => setView('kitchen')} />;
       case 'analytics':
-        return <AnalyticsView inventory={inventory} />;
+        return (
+          <AnalyticsView 
+            inventory={inventory} 
+            budgetData={budgetData} 
+            priceHistory={priceHistory} 
+            lifespanData={lifespanData}
+            currency={currency}
+            onUpdateCurrency={setCurrency}
+            onUpdateBudget={(budget) => setBudgetData(prev => ({ ...prev, monthlyBudget: budget }))}
+            onClearData={() => {
+              setInventory([]);
+              setPriceHistory({});
+              setBudgetData({ monthlyBudget: 800, months: {} });
+              setLifespanData({});
+            }}
+          />
+        );
       case 'shoppingList':
         return (
           <ShoppingListView

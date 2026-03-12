@@ -13,7 +13,44 @@ export interface InventoryItem {
   assignedDishId?: string;
   isUsed: boolean;
   isWasted: boolean;
+  usedDate?: string; // ISO string for lifespan tracking
+  store?: string; // For price comparison
 }
+
+export interface PriceHistoryEntry {
+  date: string;
+  price: number;
+  store?: string;
+}
+
+export interface BudgetData {
+  monthlyBudget: number;
+  months: {
+    [month: string]: {
+      totalSpent: number;
+      categories: Record<string, number>;
+    }
+  }
+}
+
+export interface LifespanData {
+  [itemName: string]: {
+    averageDays: number;
+    history: number[];
+  }
+}
+
+export interface Currency {
+  code: string;
+  symbol: string;
+}
+
+export const CURRENCIES: Currency[] = [
+  { code: 'MYR', symbol: 'RM' },
+  { code: 'USD', symbol: '$' },
+  { code: 'EUR', symbol: '€' },
+  { code: 'GBP', symbol: '£' },
+];
 
 export interface RecipeIngredient {
   name: string;

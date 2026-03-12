@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { InventoryItem, Recipe, MealPlan, RecipeIngredient } from '../types';
-import { Plus, Search, Calendar, BookOpen, Download, Upload, Trash2, Edit2, AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { Plus, Search, Calendar, BookOpen, Download, Upload, Trash2, Edit2, AlertCircle, CheckCircle2, X, FileText, Copy, ClipboardPaste } from 'lucide-react';
 import { format, addDays, parseISO, isSameDay } from 'date-fns';
 import { clsx } from 'clsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { exportRecipesToText, parseRecipesFromText } from '../importExportUtils';
 
 import Sheet from './ui/Sheet';
 
@@ -37,6 +38,8 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
   // Recipe State
   const [searchRecipe, setSearchRecipe] = useState('');
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
+  const [isTextImportExportOpen, setIsTextImportExportOpen] = useState(false);
+  const [textData, setTextData] = useState('');
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -116,6 +119,37 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
     };
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleTextExport = () => {
+    const text = exportRecipesToText(recipes);
+    setTextData(text);
+    setIsTextImportExportOpen(true);
+  };
+
+  const handleTextImport = () => {
+    const imported = parseRecipesFromText(textData);
+    if (imported.length === 0) return alert('No valid recipes found in text.');
+    
+    imported.forEach(r => {
+      onAddRecipe({
+        id: crypto.randomUUID(),
+        name: r.name || 'Unnamed Recipe',
+        ingredients: r.ingredients || [],
+        notes: r.notes,
+        category: r.category,
+        isFavorite: false,
+      });
+    });
+    
+    alert(`Imported ${imported.length} recipes successfully.`);
+    setIsTextImportExportOpen(false);
+    setTextData('');
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(textData);
+    alert('Copied to clipboard!');
   };
 
   // --- Meal Plan Logic ---
@@ -227,12 +261,15 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
               </button>
             </div>
 
-            <div className="flex gap-3">
-              <button onClick={handleExportRecipes} className="flex-1 bg-white border border-slate-100 text-slate-600 py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
-                <Download size={18} /> Export
+            <div className="flex flex-wrap gap-3">
+              <button onClick={handleExportRecipes} className="flex-1 min-w-[100px] bg-white border border-slate-100 text-slate-600 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
+                <Download size={16} /> JSON Export
               </button>
-              <button onClick={() => fileInputRef.current?.click()} className="flex-1 bg-white border border-slate-100 text-slate-600 py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
-                <Upload size={18} /> Import
+              <button onClick={() => fileInputRef.current?.click()} className="flex-1 min-w-[100px] bg-white border border-slate-100 text-slate-600 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
+                <Upload size={16} /> JSON Import
+              </button>
+              <button onClick={handleTextExport} className="w-full bg-white border border-slate-100 text-[#4ADE80] py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
+                <FileText size={18} /> WhatsApp / Notes Format
               </button>
               <input type="file" accept=".json" ref={fileInputRef} onChange={handleImportRecipes} className="hidden" />
             </div>
@@ -343,6 +380,41 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
         )}
       </div>
 
+      {/* Text Import/Export Sheet */}
+      <Sheet
+        isOpen={isTextImportExportOpen}
+        onClose={() => setIsTextImportExportOpen(false)}
+        title="WhatsApp / Notes Format 📝"
+      >
+        <div className="space-y-5">
+          <p className="text-sm text-slate-500 font-medium">
+            Copy this text to share via WhatsApp/Notes, or paste text from your notes to import recipes.
+          </p>
+          
+          <textarea
+            value={textData}
+            onChange={(e) => setTextData(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-mono text-xs text-slate-800 min-h-[300px] resize-none"
+            placeholder="Paste recipe text here..."
+          />
+          
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={copyToClipboard}
+              className="bg-white border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl shadow-sm hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Copy size={18} /> Copy All
+            </button>
+            <button
+              onClick={handleTextImport}
+              className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <ClipboardPaste size={18} /> Import Text
+            </button>
+          </div>
+        </div>
+      </Sheet>
+
       {/* Recipe Sheet */}
       <Sheet
         isOpen={isRecipeModalOpen}
@@ -384,7 +456,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
             </div>
             <div className="space-y-3">
               {recipeForm.ingredients?.map((ing, idx) => (
-                <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                <div key={idx} className="grid grid-cols-[1fr_70px_70px_32px] gap-2 items-center bg-slate-50 p-2 rounded-2xl border border-slate-100">
                   <input
                     type="text"
                     value={ing.name}
@@ -394,7 +466,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                       setRecipeForm({ ...recipeForm, ingredients: newIngs });
                     }}
                     placeholder="Name"
-                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
                   />
                   <input
                     type="number"
@@ -404,7 +476,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                       newIngs[idx].quantity = parseFloat(e.target.value);
                       setRecipeForm({ ...recipeForm, ingredients: newIngs });
                     }}
-                    className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium text-center"
                   />
                   <input
                     type="text"
@@ -415,7 +487,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                       setRecipeForm({ ...recipeForm, ingredients: newIngs });
                     }}
                     placeholder="Unit"
-                    className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium text-center"
                   />
                   <button 
                     onClick={() => {

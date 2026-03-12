@@ -110,7 +110,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
                   
                   <div className="flex gap-2">
                     <button
-                      onClick={() => onUpdateItem({ ...item, isUsed: true })}
+                      onClick={() => onUpdateItem({ ...item, isUsed: true, usedDate: new Date().toISOString() })}
                       className="flex-1 bg-white text-emerald-600 border border-emerald-100 text-sm font-bold py-2 rounded-xl hover:bg-emerald-50 transition-colors flex items-center justify-center gap-1 shadow-sm"
                     >
                       <Check size={16} /> Use
@@ -159,7 +159,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
                       </div>
                       <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => onUpdateItem({ ...item, isUsed: true })}
+                          onClick={() => onUpdateItem({ ...item, isUsed: true, usedDate: new Date().toISOString() })}
                           className="w-8 h-8 flex items-center justify-center text-emerald-600 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-colors"
                           title="Mark as used"
                         >

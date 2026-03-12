@@ -14,7 +14,8 @@ import {
   Lightbulb,
   Droplets,
   Wind,
-  Search
+  Search,
+  Users
 } from 'lucide-react';
 import { getCategoryEmoji } from '../utils';
 import { clsx } from 'clsx';

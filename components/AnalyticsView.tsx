@@ -1,25 +1,48 @@
-import React, { useState } from 'react';
-import { InventoryItem } from '../types';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Trash2, PieChart as PieChartIcon, AlertTriangle } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { InventoryItem, BudgetData, PriceHistoryEntry, LifespanData, Currency, CURRENCIES } from '../types';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
+import { TrendingUp, TrendingDown, DollarSign, Trash2, PieChart as PieChartIcon, AlertTriangle, Activity, Store, Clock } from 'lucide-react';
 import { getCategoryEmoji } from '../utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { format } from 'date-fns';
+import { clsx } from 'clsx';
 
 interface AnalyticsViewProps {
   inventory: InventoryItem[];
+  budgetData?: BudgetData;
+  priceHistory?: Record<string, PriceHistoryEntry[]>;
+  lifespanData?: LifespanData;
+  currency: Currency;
+  onUpdateCurrency: (currency: Currency) => void;
+  onUpdateBudget: (budget: number) => void;
+  onClearData: () => void;
 }
 
 const COLORS = ['#4ADE80', '#38BDF8', '#2DD4BF', '#FBBF24', '#F472B6', '#A78BFA', '#94A3B8'];
 
-const CURRENCIES = [
-  { code: 'MYR', symbol: 'RM' },
-  { code: 'USD', symbol: '$' },
-  { code: 'EUR', symbol: '€' },
-  { code: 'GBP', symbol: '£' },
-];
+const NUTRITION_COLORS: Record<string, string> = {
+  Protein: '#F472B6',
+  Carbs: '#FBBF24',
+  Vegetables: '#4ADE80',
+  Fruits: '#38BDF8',
+  Fats: '#A78BFA',
+  Other: '#94A3B8'
+};
 
-const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
-  const [currency, setCurrency] = useState(CURRENCIES[0]);
+const AnalyticsView: React.FC<AnalyticsViewProps> = ({ 
+  inventory, 
+  budgetData, 
+  priceHistory = {}, 
+  lifespanData = {},
+  currency,
+  onUpdateCurrency,
+  onUpdateBudget,
+  onClearData
+}) => {
+  const [selectedPriceItem, setSelectedPriceItem] = useState<string>('');
+  const [selectedStoreItem, setSelectedStoreItem] = useState<string>('');
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [tempBudget, setTempBudget] = useState(budgetData?.monthlyBudget || 800);
 
   const totalSpent = inventory.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
   const wastedItems = inventory.filter(item => item.isWasted);
@@ -44,35 +67,140 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
     return `${currency.symbol}${value.toFixed(2)}`;
   };
 
+  const currentMonthKey = format(new Date(), 'yyyy-MM');
+  const currentMonthSpent = useMemo(() => {
+    return inventory
+      .filter(item => format(new Date(item.purchaseDate), 'yyyy-MM') === currentMonthKey)
+      .reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+  }, [inventory, currentMonthKey]);
+  
+  const monthlyBudget = budgetData?.monthlyBudget || 800;
+  const budgetPercentage = monthlyBudget > 0 ? (currentMonthSpent / monthlyBudget) * 100 : 0;
+
+  // Nutrition Data
+  const nutritionData = useMemo(() => {
+    const stats: Record<string, number> = { Protein: 0, Carbs: 0, Vegetables: 0, Fruits: 0, Fats: 0, Other: 0 };
+    inventory.forEach(item => {
+      const name = item.name.toLowerCase();
+      const cat = item.category;
+      if (cat === 'meat' || name.includes('egg') || name.includes('tofu') || name.includes('fish')) stats.Protein++;
+      else if (cat === 'bakery' || name.includes('rice') || name.includes('pasta') || name.includes('bread')) stats.Carbs++;
+      else if (cat === 'produce' && (name.includes('leaf') || name.includes('broccoli') || name.includes('cabbage') || name.includes('carrot') || name.includes('spinach'))) stats.Vegetables++;
+      else if (cat === 'produce') stats.Fruits++; // Fallback for produce
+      else if (cat === 'dairy' && (name.includes('butter') || name.includes('cheese')) || name.includes('oil')) stats.Fats++;
+      else stats.Other++;
+    });
+    return Object.entries(stats).filter(([_, val]) => val > 0).map(([name, value]) => ({ name, value }));
+  }, [inventory]);
+
+  // Store Prices
+  const storePrices = useMemo(() => {
+    const prices: Record<string, { store: string, price: number }[]> = {};
+    Object.entries(priceHistory).forEach(([item, history]) => {
+      prices[item] = [];
+      const storeMap = new Map<string, number>();
+      (history as PriceHistoryEntry[]).forEach(entry => {
+        if (entry.store) {
+          // Keep the latest price for each store
+          storeMap.set(entry.store, entry.price);
+        }
+      });
+      storeMap.forEach((price, store) => {
+        prices[item].push({ store, price });
+      });
+    });
+    return prices;
+  }, [priceHistory]);
+
+  // Initialize selected items
+  useEffect(() => {
+    if (!selectedPriceItem && Object.keys(priceHistory).length > 0) {
+      setSelectedPriceItem(Object.keys(priceHistory)[0]);
+    }
+    if (!selectedStoreItem && Object.keys(storePrices).length > 0) {
+      setSelectedStoreItem(Object.keys(storePrices)[0]);
+    }
+  }, [priceHistory, storePrices]);
+
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const handleSaveBudget = () => {
+    onUpdateBudget(tempBudget);
+    setIsEditingBudget(false);
+  };
+
+  const handleClearData = () => {
+    onClearData();
+    setShowClearConfirm(false);
+  };
+
   return (
     <div className="flex flex-col h-full pb-28 relative">
+      {/* Custom Confirmation Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-xs w-full animate-spring-up">
+            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <Trash2 className="text-rose-500" size={32} />
+            </div>
+            <h3 className="text-xl font-black text-slate-800 text-center mb-2">Clear All Stats?</h3>
+            <p className="text-slate-500 text-center text-sm font-medium mb-8">
+              This will permanently delete your price history and budget data. This cannot be undone.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setShowClearConfirm(false)}
+                className="py-3 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleClearData}
+                className="py-3 px-4 bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-500/20 active:scale-95 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white/60 backdrop-blur-xl px-6 pt-8 pb-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl flex justify-between items-center">
         <h1 className="text-3xl font-extrabold text-[#1E293B] tracking-tight">Stats 📊</h1>
-        <div className="relative w-32">
-          <Select
-            value={currency.code}
-            onValueChange={(value) => {
-              const selected = CURRENCIES.find(c => c.code === value);
-              if (selected) setCurrency(selected);
-            }}
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowClearConfirm(true)}
+            className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 transition-colors shadow-sm"
+            title="Clear Analytics Data"
           >
-            <SelectTrigger className="w-full bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-4 py-2.5 outline-none shadow-sm focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 transition-all cursor-pointer h-auto">
-              <SelectValue placeholder="Currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCIES.map(c => (
-                <SelectItem key={c.code} value={c.code}>{c.code} ({c.symbol})</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Trash2 size={18} />
+          </button>
+          <div className="relative w-32">
+            <Select
+              value={currency.code}
+              onValueChange={(value) => {
+                const selected = CURRENCIES.find(c => c.code === value);
+                if (selected) onUpdateCurrency(selected);
+              }}
+            >
+              <SelectTrigger className="w-full bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-3 py-2 outline-none shadow-sm focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 transition-all cursor-pointer h-auto">
+                <SelectValue placeholder="Currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map(c => (
+                  <SelectItem key={c.code} value={c.code}>{c.code} ({c.symbol})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
+        
+        {/* 1. Total Spent & Wasted Cards */}
         <div className="grid grid-cols-2 gap-4">
-          <div 
-            className="bg-gradient-to-br from-[#4ADE80]/10 to-[#38BDF8]/10 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-spring-up"
-          >
+          <div className="bg-gradient-to-br from-[#4ADE80]/10 to-[#38BDF8]/10 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-spring-up">
             <div className="flex items-center gap-2 text-[#38BDF8] mb-3">
               <div className="p-2 bg-white rounded-xl shadow-sm">
                 <DollarSign size={20} strokeWidth={2.5} />
@@ -82,9 +210,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
             <p className="text-3xl font-black text-slate-800 tracking-tight">{formatCurrency(totalSpent)}</p>
           </div>
           
-          <div 
-            className="bg-gradient-to-br from-rose-50 to-orange-50 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-spring-up"
-          >
+          <div className="bg-gradient-to-br from-rose-50 to-orange-50 p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-white animate-spring-up">
             <div className="flex items-center gap-2 text-rose-500 mb-3">
               <div className="p-2 bg-white rounded-xl shadow-sm">
                 <Trash2 size={20} strokeWidth={2.5} />
@@ -94,14 +220,73 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
             <p className="text-3xl font-black text-rose-600 tracking-tight">{formatCurrency(totalWasted)}</p>
             <div className="mt-2 inline-flex items-center gap-1 bg-white/60 px-2 py-1 rounded-lg">
               <AlertTriangle size={12} className="text-rose-500" />
-              <p className="text-xs text-rose-600 font-bold">{wastePercentage.toFixed(1)}% of total</p>
+              <p className="text-xs text-rose-600 font-bold">{wastePercentage.toFixed(1)}%</p>
             </div>
           </div>
         </div>
 
-        <div 
-          className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up"
-        >
+        {/* 2. Monthly Budget Card */}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <DollarSign size={20} className="text-[#38BDF8]" />
+              <h3 className="font-extrabold text-slate-800 text-lg">Monthly Budget</h3>
+            </div>
+            <button 
+              onClick={() => setIsEditingBudget(!isEditingBudget)}
+              className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-3 py-1.5 rounded-xl hover:bg-[#38BDF8]/20 transition-colors"
+            >
+              {isEditingBudget ? 'Cancel' : 'Set Budget'}
+            </button>
+          </div>
+
+          {isEditingBudget ? (
+            <div className="space-y-4 animate-fade-in">
+              <div>
+                <label className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mb-1.5 block">Monthly Limit ({currency.symbol})</label>
+                <input
+                  type="number"
+                  value={tempBudget}
+                  onChange={(e) => setTempBudget(parseFloat(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-black text-slate-800 focus:border-[#38BDF8] focus:ring-4 focus:ring-[#38BDF8]/10 outline-none transition-all"
+                />
+              </div>
+              <button 
+                onClick={handleSaveBudget}
+                className="w-full bg-[#38BDF8] text-white font-bold py-3 rounded-xl shadow-lg shadow-[#38BDF8]/20 active:scale-95 transition-all"
+              >
+                Save Budget
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-end mb-2">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Spent this month</p>
+                  <p className="text-2xl font-black text-slate-800">{formatCurrency(currentMonthSpent)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-slate-500">Budget</p>
+                  <p className="text-lg font-bold text-slate-600">{formatCurrency(monthlyBudget)}</p>
+                </div>
+              </div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-3">
+                <div 
+                  className={clsx("h-full rounded-full transition-all duration-500", budgetPercentage > 90 ? "bg-rose-500" : budgetPercentage > 70 ? "bg-amber-500" : "bg-emerald-500")}
+                  style={{ width: `${Math.min(budgetPercentage, 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center text-sm font-bold">
+                <span className={budgetPercentage > 100 ? "text-rose-500" : "text-emerald-500"}>
+                  {budgetPercentage > 100 ? `${formatCurrency(currentMonthSpent - monthlyBudget)} over budget` : `${formatCurrency(monthlyBudget - currentMonthSpent)} remaining`}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* 3. Spend by Category */}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
           <div className="flex items-center gap-2 mb-6">
             <PieChartIcon size={20} className="text-[#4ADE80]" />
             <h3 className="font-extrabold text-slate-800 text-lg">Spend by Category</h3>
@@ -129,13 +314,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
                     </Pie>
                     <Tooltip 
                       formatter={(value: number) => formatCurrency(value)}
-                      contentStyle={{ 
-                        borderRadius: '16px', 
-                        border: 'none', 
-                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-                        fontWeight: 'bold',
-                        padding: '12px'
-                      }}
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: 'bold', padding: '12px' }}
                       itemStyle={{ color: '#1E293B', fontWeight: 'bold' }}
                     />
                   </PieChart>
@@ -145,10 +324,10 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
                   <span className="text-slate-800 font-black text-xl">{formatCurrency(totalSpent)}</span>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-3 justify-center mt-6">
+              <div className="flex flex-wrap gap-2 justify-center mt-6">
                 {categoryData.map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-2 text-sm font-bold text-slate-600 capitalize bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
-                    <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                  <div key={entry.name} className="flex items-center gap-2 text-[10px] font-bold text-slate-600 capitalize bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                    <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                     {getCategoryEmoji(entry.name)} {entry.name}
                   </div>
                 ))}
@@ -162,10 +341,127 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ inventory }) => {
           )}
         </div>
 
+        {/* 4. Price Trends */}
+        {Object.keys(priceHistory).length > 0 && (
+          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp size={20} className="text-indigo-500" />
+              <h3 className="font-extrabold text-slate-800 text-lg">Price Trends</h3>
+            </div>
+            <Select value={selectedPriceItem} onValueChange={setSelectedPriceItem}>
+              <SelectTrigger className="w-full mb-4">
+                <SelectValue placeholder="Select an item" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(priceHistory).map(item => (
+                  <SelectItem key={item} value={item} className="capitalize">{item}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedPriceItem && priceHistory[selectedPriceItem] && (
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={priceHistory[selectedPriceItem]}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="date" tickFormatter={(val) => format(new Date(val), 'MMM d')} fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${currency.symbol}${val}`} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} labelFormatter={(label) => format(new Date(label), 'MMM d, yyyy')} />
+                    <Line type="monotone" dataKey="price" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 5. Store Comparison */}
+        {Object.keys(storePrices).length > 0 && (
+          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+            <div className="flex items-center gap-2 mb-4">
+              <Store size={20} className="text-orange-500" />
+              <h3 className="font-extrabold text-slate-800 text-lg">Store Comparison</h3>
+            </div>
+            <Select value={selectedStoreItem} onValueChange={setSelectedStoreItem}>
+              <SelectTrigger className="w-full mb-4">
+                <SelectValue placeholder="Select an item" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(storePrices).map(item => (
+                  <SelectItem key={item} value={item} className="capitalize">{item}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedStoreItem && storePrices[selectedStoreItem] && (
+              <div className="space-y-3">
+                {storePrices[selectedStoreItem].sort((a, b) => a.price - b.price).map((sp, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="font-bold text-slate-700">{sp.store || 'Unknown Store'}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-slate-800">{formatCurrency(sp.price)}</span>
+                      {idx === 0 && <span className="text-[10px] font-bold bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Cheapest</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 6. Nutrition Balance */}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity size={20} className="text-emerald-500" />
+            <h3 className="font-extrabold text-slate-800 text-lg">Nutrition Balance</h3>
+          </div>
+          {nutritionData.length > 0 ? (
+            <>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={nutritionData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={5} dataKey="value">
+                      {nutritionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={NUTRITION_COLORS[entry.name] || '#94A3B8'} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center mt-2">
+                {nutritionData.map(entry => (
+                  <div key={entry.name} className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: NUTRITION_COLORS[entry.name] || '#94A3B8' }} />
+                    {entry.name}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500 italic text-center py-4">Add groceries to see nutrition insights.</p>
+          )}
+        </div>
+
+        {/* 7. Lifespan Intelligence */}
+        {Object.keys(lifespanData).length > 0 && (
+          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock size={20} className="text-cyan-500" />
+              <h3 className="font-extrabold text-slate-800 text-lg">Lifespan Intelligence</h3>
+            </div>
+            <div className="space-y-3">
+              {Object.entries(lifespanData).sort((a, b) => a[0].localeCompare(b[0])).slice(0, 10).map(([item, data]) => (
+                <div key={item} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="font-bold text-slate-700 capitalize">{item}</span>
+                  <span className="font-bold text-cyan-600 bg-cyan-100 px-2 py-1 rounded-lg text-sm">{(data as any).averageDays} days avg</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Top Wasted List */}
         {topWasted.length > 0 && (
-          <div 
-            className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up"
-          >
+          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
             <div className="flex items-center gap-2 mb-5">
               <TrendingDown size={20} className="text-rose-500" />
               <h3 className="font-extrabold text-slate-800 text-lg">Top Wasted Items 🥀</h3>

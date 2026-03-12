@@ -22,7 +22,11 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
     setError('');
     try {
       const result = await parseReceiptImage(base64Image);
-      onItemsExtracted(result.items);
+      const itemsWithStore = result.items.map(item => ({
+        ...item,
+        store: result.store
+      }));
+      onItemsExtracted(itemsWithStore);
     } catch (err) {
       console.error(err);
       setError("Failed to analyze receipt. Please try again.");
