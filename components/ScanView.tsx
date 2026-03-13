@@ -59,8 +59,18 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
     setIsProcessing(true);
     setError('');
     try {
+      // Check local cache first to reduce API usage
+      const cachedData = localStorage.getItem(`barcode_cache_${barcode}`);
+      if (cachedData) {
+        console.log("Using cached barcode data for:", barcode);
+        onItemsExtracted([JSON.parse(cachedData)]);
+        return;
+      }
+
       const result = await searchBarcode(barcode);
       if (result) {
+        // Save to cache for future use
+        localStorage.setItem(`barcode_cache_${barcode}`, JSON.stringify(result));
         onItemsExtracted([result]);
       } else {
         setError("Product not found for this barcode.");

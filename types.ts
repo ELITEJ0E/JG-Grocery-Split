@@ -4,6 +4,7 @@ export interface InventoryItem {
   id: string;
   name: string;
   quantity: number;
+  originalQuantity: number;
   unit: string;
   unitPrice: number;
   category: Category;

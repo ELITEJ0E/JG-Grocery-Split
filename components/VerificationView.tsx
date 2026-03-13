@@ -47,6 +47,7 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
         id: crypto.randomUUID(),
         name: item.name || 'Unknown',
         quantity: item.quantity || 1,
+        originalQuantity: item.quantity || 1,
         unit: item.unit || 'pcs',
         unitPrice: item.unitPrice || 0,
         category: (item.category as Category) || 'other',

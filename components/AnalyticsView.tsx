@@ -46,17 +46,18 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [tempBudget, setTempBudget] = useState(budgetData?.monthlyBudget || 800);
 
-  const totalSpent = inventory.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+  const totalSpent = inventory.reduce((sum, item) => sum + (item.unitPrice * (item.originalQuantity ?? item.quantity)), 0);
   const wastedItems = inventory.filter(item => item.isWasted);
   const totalWasted = wastedItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
   const wastePercentage = totalSpent > 0 ? (totalWasted / totalSpent) * 100 : 0;
 
   const categoryData = inventory.reduce((acc, item) => {
     const existing = acc.find(c => c.name === item.category);
+    const itemValue = item.unitPrice * (item.originalQuantity ?? item.quantity);
     if (existing) {
-      existing.value += item.unitPrice * item.quantity;
+      existing.value += itemValue;
     } else {
-      acc.push({ name: item.category, value: item.unitPrice * item.quantity });
+      acc.push({ name: item.category, value: itemValue });
     }
     return acc;
   }, [] as { name: string, value: number }[]);
@@ -73,7 +74,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const currentMonthSpent = useMemo(() => {
     return inventory
       .filter(item => format(new Date(item.purchaseDate), 'yyyy-MM') === currentMonthKey)
-      .reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+      .reduce((sum, item) => sum + (item.unitPrice * (item.originalQuantity ?? item.quantity)), 0);
   }, [inventory, currentMonthKey]);
   
   const monthlyBudget = budgetData?.monthlyBudget || 800;
