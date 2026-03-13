@@ -10,6 +10,7 @@ import VerificationView from './components/VerificationView';
 import KitchenDashboardView from './components/KitchenDashboardView';
 import InstallPrompt from './components/InstallPrompt';
 import LoadingScreen from './components/LoadingScreen';
+import Toast, { ToastType } from './components/ui/Toast';
 import { addDays, format, differenceInDays } from 'date-fns';
 
 const App: React.FC = () => {
@@ -22,6 +23,16 @@ const App: React.FC = () => {
   const [scannedItems, setScannedItems] = useState<Partial<InventoryItem>[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [currency, setCurrency] = useState<Currency>(CURRENCIES[0]);
+
+  const [toast, setToast] = useState<{ message: string; type: ToastType; isVisible: boolean }>({
+    message: '',
+    type: 'success',
+    isVisible: false
+  });
+
+  const showToast = (message: string, type: ToastType = 'success') => {
+    setToast({ message, type, isVisible: true });
+  };
 
   const [priceHistory, setPriceHistory] = useState<Record<string, PriceHistoryEntry[]>>({});
   const [budgetData, setBudgetData] = useState<BudgetData>({ monthlyBudget: 800, months: {} });
@@ -223,6 +234,7 @@ const App: React.FC = () => {
             onDeleteMealPlan={handleDeleteMealPlan}
             onUpdateInventory={setInventory}
             onAddMealLog={handleAddMealLog}
+            onShowToast={showToast}
           />
         );
       case 'scan':
@@ -257,6 +269,7 @@ const App: React.FC = () => {
             onUpdateShoppingList={setShoppingList}
             onAddToInventory={handleQuickAddInventory}
             onNavigateToScan={() => setView('scan')}
+            onShowToast={showToast}
           />
         );
       default:
@@ -279,6 +292,12 @@ const App: React.FC = () => {
     >
       <LoadingScreen />
       {renderContent()}
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        isVisible={toast.isVisible} 
+        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))} 
+      />
       {!isVerifying && <InstallPrompt />}
       {!isVerifying && <BottomNav currentView={view} onNavigate={setView} />}
     </div>

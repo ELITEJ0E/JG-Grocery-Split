@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { InventoryItem, Recipe, MealPlan, RecipeIngredient, MealLog } from '../types';
+import { ToastType } from './ui/Toast';
 import { Plus, Search, Calendar, BookOpen, Trash2, Edit2, AlertCircle, CheckCircle2, X, FileText, Copy, ClipboardPaste } from 'lucide-react';
 import { format, addDays, parseISO, isSameDay } from 'date-fns';
 import { clsx } from 'clsx';
@@ -20,6 +21,7 @@ interface MealPlannerViewProps {
   onDeleteMealPlan: (id: string) => void;
   onUpdateInventory: (items: InventoryItem[]) => void;
   onAddMealLog?: (mealLog: MealLog) => void;
+  onShowToast?: (message: string, type?: ToastType) => void;
 }
 
 const MealPlannerView: React.FC<MealPlannerViewProps> = ({
@@ -34,6 +36,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
   onDeleteMealPlan,
   onUpdateInventory,
   onAddMealLog,
+  onShowToast,
 }) => {
   const [activeTab, setActiveTab] = useState<'plan' | 'recipes'>('plan');
   
@@ -66,8 +69,16 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
   }, [recipes, searchRecipe]);
 
   const handleSaveRecipe = () => {
-    if (!recipeForm.name) return alert('Recipe name is required');
-    if (!recipeForm.ingredients || recipeForm.ingredients.length === 0) return alert('Add at least one ingredient');
+    if (!recipeForm.name) {
+      if (onShowToast) onShowToast('Recipe name is required', 'error');
+      else alert('Recipe name is required');
+      return;
+    }
+    if (!recipeForm.ingredients || recipeForm.ingredients.length === 0) {
+      if (onShowToast) onShowToast('Add at least one ingredient', 'error');
+      else alert('Add at least one ingredient');
+      return;
+    }
 
     if (editingRecipe) {
       onUpdateRecipe({ ...editingRecipe, ...recipeForm } as Recipe);
@@ -94,7 +105,11 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
 
   const handleTextImport = () => {
     const imported = parseRecipesFromText(textData);
-    if (imported.length === 0) return alert('No valid recipes found in text.');
+    if (imported.length === 0) {
+      if (onShowToast) onShowToast('No valid recipes found in text.', 'error');
+      else alert('No valid recipes found in text.');
+      return;
+    }
     
     imported.forEach(r => {
       onAddRecipe({
@@ -107,21 +122,27 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
       });
     });
     
-    alert(`Imported ${imported.length} recipes successfully.`);
+    if (onShowToast) onShowToast(`Imported ${imported.length} recipes successfully!`, 'success');
+    else alert(`Imported ${imported.length} recipes successfully.`);
     setIsTextImportExportOpen(false);
     setTextData('');
   };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(textData);
-    alert('Copied to clipboard!');
+    if (onShowToast) onShowToast('Copied to clipboard!', 'success');
+    else alert('Copied to clipboard!');
   };
 
   // --- Meal Plan Logic ---
   const days = Array.from({ length: 7 }).map((_, i) => addDays(new Date(), i));
 
   const handleSaveMealPlan = () => {
-    if (!planForm.recipeId) return alert('Select a recipe');
+    if (!planForm.recipeId) {
+      if (onShowToast) onShowToast('Select a recipe', 'error');
+      else alert('Select a recipe');
+      return;
+    }
     
     // Deduct from inventory
     const updatedInventory = [...inventory];
@@ -135,7 +156,9 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
         if (itemIndex >= 0) {
           const item = updatedInventory[itemIndex];
           if (item.quantity < assignment.quantity) {
-            return alert(`Not enough ${item.name} in inventory!`);
+            if (onShowToast) onShowToast(`Not enough ${item.name} in inventory!`, 'error');
+            else alert(`Not enough ${item.name} in inventory!`);
+            return;
           }
           
           const cost = item.unitPrice * assignment.quantity;

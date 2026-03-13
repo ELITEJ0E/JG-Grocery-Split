@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { InventoryItem, Recipe, MealPlan, ShoppingListItem, Category } from '../types';
+import { ToastType } from './ui/Toast';
 import { Plus, Search, Trash2, CheckCircle2, Circle, AlertCircle, ChevronDown, PackagePlus, Camera, Check, FileText, Copy, ClipboardPaste } from 'lucide-react';
 import { clsx } from 'clsx';
 import { differenceInDays } from 'date-fns';
@@ -17,6 +18,7 @@ interface ShoppingListViewProps {
   onUpdateShoppingList: (list: ShoppingListItem[]) => void;
   onAddToInventory: (item: Partial<InventoryItem>) => void;
   onNavigateToScan: () => void;
+  onShowToast?: (message: string, type?: ToastType) => void;
 }
 
 const CATEGORIES: Category[] = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other'];
@@ -28,7 +30,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   shoppingList,
   onUpdateShoppingList,
   onAddToInventory,
-  onNavigateToScan
+  onNavigateToScan,
+  onShowToast
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [newItemName, setNewItemName] = useState('');
@@ -127,7 +130,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   const handleAddItem = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!newItemName.trim()) return;
+    if (!newItemName.trim()) {
+      if (onShowToast) onShowToast('Item name is required', 'error');
+      else alert('Item name is required');
+      return;
+    }
 
     const newItem: ShoppingListItem = {
       id: crypto.randomUUID(),
@@ -200,7 +207,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   const handleTextImport = () => {
     const imported = parseShoppingListFromText(textData);
-    if (imported.length === 0) return alert('No valid items found in text.');
+    if (imported.length === 0) {
+      if (onShowToast) onShowToast('No valid items found in text.', 'error');
+      else alert('No valid items found in text.');
+      return;
+    }
     
     const newItems: ShoppingListItem[] = imported.map(item => ({
       id: crypto.randomUUID(),
@@ -211,14 +222,16 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     }));
     
     onUpdateShoppingList([...shoppingList, ...newItems]);
-    alert(`Imported ${newItems.length} items successfully.`);
+    if (onShowToast) onShowToast(`Imported ${newItems.length} items successfully!`, 'success');
+    else alert(`Imported ${newItems.length} items successfully.`);
     setIsTextImportExportOpen(false);
     setTextData('');
   };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(textData);
-    alert('Copied to clipboard!');
+    if (onShowToast) onShowToast('Copied to clipboard!', 'success');
+    else alert('Copied to clipboard!');
   };
 
   const filteredList = shoppingList.filter(item => 
