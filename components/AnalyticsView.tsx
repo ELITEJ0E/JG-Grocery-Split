@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { InventoryItem, BudgetData, PriceHistoryEntry, LifespanData, Currency, CURRENCIES } from '../types';
+import { InventoryItem, BudgetData, PriceHistoryEntry, LifespanData, Currency, CURRENCIES, MealLog } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Trash2, PieChart as PieChartIcon, AlertTriangle, Activity, Store, Clock } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Trash2, PieChart as PieChartIcon, AlertTriangle, Activity, Store, Clock, Utensils } from 'lucide-react';
 import { getCategoryEmoji } from '../utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { format } from 'date-fns';
@@ -12,6 +12,7 @@ interface AnalyticsViewProps {
   budgetData?: BudgetData;
   priceHistory?: Record<string, PriceHistoryEntry[]>;
   lifespanData?: LifespanData;
+  mealLogs?: MealLog[];
   currency: Currency;
   onUpdateCurrency: (currency: Currency) => void;
   onUpdateBudget: (budget: number) => void;
@@ -34,6 +35,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   budgetData, 
   priceHistory = {}, 
   lifespanData = {},
+  mealLogs = [],
   currency,
   onUpdateCurrency,
   onUpdateBudget,
@@ -111,6 +113,67 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     });
     return prices;
   }, [priceHistory]);
+
+  // Meal Cost Analytics
+  const mealCostData = useMemo(() => {
+    return mealLogs.map(log => ({
+      name: log.recipeName,
+      cost: log.cost,
+      date: format(new Date(log.date), 'MMM dd')
+    })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [mealLogs]);
+
+  const ingredientUsageData = useMemo(() => {
+    const usage: Record<string, number> = {};
+    mealLogs.forEach(log => {
+      log.ingredients.forEach(ing => {
+        usage[ing.name] = (usage[ing.name] || 0) + ing.quantity;
+      });
+    });
+    return Object.entries(usage)
+      .map(([name, quantity]) => ({ name, quantity }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5); // Top 5
+  }, [mealLogs]);
+
+  const mealStats = useMemo(() => {
+    if (mealLogs.length === 0) return null;
+    
+    const totalCost = mealLogs.reduce((sum, log) => sum + log.cost, 0);
+    const avgCost = totalCost / mealLogs.length;
+    const sortedMeals = [...mealLogs].sort((a, b) => b.cost - a.cost);
+    const mostExpensive = sortedMeals[0];
+    const cheapest = sortedMeals[sortedMeals.length - 1];
+    
+    // Weekly cost
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const weeklyLogs = mealLogs.filter(log => new Date(log.date) >= oneWeekAgo);
+    const weeklyCost = weeklyLogs.reduce((sum, log) => sum + log.cost, 0);
+
+    return { totalCost, avgCost, mostExpensive, cheapest, weeklyCost, weeklyCount: weeklyLogs.length };
+  }, [mealLogs]);
+
+  const mealInsights = useMemo(() => {
+    if (!mealStats || mealLogs.length === 0) return [];
+    const insights = [];
+    
+    if (mealStats.cheapest) {
+      insights.push(`${mealStats.cheapest.recipeName} is one of your cheapest meals at ${formatCurrency(mealStats.cheapest.cost)}.`);
+    }
+    
+    if (ingredientUsageData.length > 0) {
+      insights.push(`Your most used ingredient is ${ingredientUsageData[0].name}.`);
+    }
+
+    const avgTakeoutCost = 15; // Assume 15 per meal
+    const savings = (avgTakeoutCost * mealLogs.length) - mealStats.totalCost;
+    if (savings > 0) {
+      insights.push(`Cooking at home saved approximately ${formatCurrency(savings)} compared to average takeout.`);
+    }
+
+    return insights;
+  }, [mealStats, ingredientUsageData, mealLogs, currency]);
 
   // Initialize selected items
   useEffect(() => {
@@ -400,6 +463,85 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       <span className="font-black text-slate-800">{formatCurrency(sp.price)}</span>
                       {idx === 0 && <span className="text-[10px] font-bold bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Cheapest</span>}
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Meal Cost Analytics */}
+        {mealLogs.length > 0 && mealStats && (
+          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+            <div className="flex items-center gap-2 mb-6">
+              <Utensils size={20} className="text-indigo-500" />
+              <h3 className="font-extrabold text-slate-800 text-lg">Meal Cost Analytics</h3>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50">
+                <p className="text-xs font-bold text-indigo-600/70 uppercase tracking-wider mb-1">Weekly Cost</p>
+                <p className="text-2xl font-black text-indigo-700">{formatCurrency(mealStats.weeklyCost)}</p>
+                <p className="text-[10px] font-bold text-indigo-500 mt-1">{mealStats.weeklyCount} meals cooked</p>
+              </div>
+              <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
+                <p className="text-xs font-bold text-emerald-600/70 uppercase tracking-wider mb-1">Avg Meal</p>
+                <p className="text-2xl font-black text-emerald-700">{formatCurrency(mealStats.avgCost)}</p>
+              </div>
+            </div>
+
+            {/* Meal Cost Chart */}
+            {mealCostData.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-bold text-slate-600 mb-3">Cost Over Time</h4>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={mealCostData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
+                      <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${currency.symbol}${val}`} />
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value)}
+                        labelFormatter={(label) => `Date: ${label}`}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
+                      />
+                      <Line type="monotone" dataKey="cost" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} name="Meal Cost" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Ingredient Usage Chart */}
+            {ingredientUsageData.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-bold text-slate-600 mb-3">Top Ingredients Used</h4>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={ingredientUsageData} layout="vertical" margin={{ top: 0, right: 0, left: 20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                      <XAxis type="number" fontSize={10} tickLine={false} axisLine={false} />
+                      <YAxis dataKey="name" type="category" fontSize={10} tickLine={false} axisLine={false} width={80} />
+                      <Tooltip 
+                        formatter={(value: number) => value}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
+                      />
+                      <Bar dataKey="quantity" fill="#38BDF8" radius={[0, 4, 4, 0]} barSize={20} name="Quantity Used" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Insights */}
+            {mealInsights.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-slate-600 mb-2">Insights</h4>
+                {mealInsights.map((insight, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span className="text-indigo-500 mt-0.5">•</span>
+                    <span className="font-medium">{insight}</span>
                   </div>
                 ))}
               </div>

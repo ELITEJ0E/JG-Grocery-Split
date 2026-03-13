@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppState, InventoryItem, Recipe, MealPlan, ShoppingListItem, PriceHistoryEntry, BudgetData, LifespanData, Currency, CURRENCIES } from './types';
+import { AppState, InventoryItem, Recipe, MealPlan, ShoppingListItem, PriceHistoryEntry, BudgetData, LifespanData, Currency, CURRENCIES, MealLog } from './types';
 import BottomNav from './components/BottomNav';
 import InventoryView from './components/InventoryView';
 import MealPlannerView from './components/MealPlannerView';
@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
   const [scannedItems, setScannedItems] = useState<Partial<InventoryItem>[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -30,6 +31,7 @@ const App: React.FC = () => {
     const storedInventory = localStorage.getItem('grocery_inventory');
     const storedRecipes = localStorage.getItem('userRecipes');
     const storedMealPlans = localStorage.getItem('grocery_meal_plans');
+    const storedMealLogs = localStorage.getItem('grocery_meal_logs');
     const storedShoppingList = localStorage.getItem('shoppingList');
     const storedPriceHistory = localStorage.getItem('priceHistory');
     const storedBudgetData = localStorage.getItem('budgetData');
@@ -39,6 +41,7 @@ const App: React.FC = () => {
     if (storedInventory) setInventory(JSON.parse(storedInventory));
     if (storedRecipes) setRecipes(JSON.parse(storedRecipes));
     if (storedMealPlans) setMealPlans(JSON.parse(storedMealPlans));
+    if (storedMealLogs) setMealLogs(JSON.parse(storedMealLogs));
     if (storedShoppingList) setShoppingList(JSON.parse(storedShoppingList));
     if (storedPriceHistory) setPriceHistory(JSON.parse(storedPriceHistory));
     if (storedBudgetData) setBudgetData(JSON.parse(storedBudgetData));
@@ -50,12 +53,17 @@ const App: React.FC = () => {
     localStorage.setItem('grocery_inventory', JSON.stringify(inventory));
     localStorage.setItem('userRecipes', JSON.stringify(recipes));
     localStorage.setItem('grocery_meal_plans', JSON.stringify(mealPlans));
+    localStorage.setItem('grocery_meal_logs', JSON.stringify(mealLogs));
     localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
     localStorage.setItem('priceHistory', JSON.stringify(priceHistory));
     localStorage.setItem('budgetData', JSON.stringify(budgetData));
     localStorage.setItem('lifespanData', JSON.stringify(lifespanData));
     localStorage.setItem('currency', JSON.stringify(currency));
-  }, [inventory, recipes, mealPlans, shoppingList, priceHistory, budgetData, lifespanData, currency]);
+  }, [inventory, recipes, mealPlans, mealLogs, shoppingList, priceHistory, budgetData, lifespanData, currency]);
+
+  const handleAddMealLog = (mealLog: MealLog) => {
+    setMealLogs(prev => [...prev, mealLog]);
+  };
 
   const handleUpdateItem = (updatedItem: InventoryItem) => {
     setInventory(prev => {
@@ -82,7 +90,7 @@ const App: React.FC = () => {
   };
 
   const handleAddRecipe = (recipe: Recipe) => {
-    setRecipes([...recipes, recipe]);
+    setRecipes(prev => [...prev, recipe]);
   };
 
   const handleUpdateRecipe = (recipe: Recipe) => {
@@ -95,7 +103,7 @@ const App: React.FC = () => {
   };
 
   const handleAddMealPlan = (mealPlan: MealPlan) => {
-    setMealPlans([...mealPlans, mealPlan]);
+    setMealPlans(prev => [...prev, mealPlan]);
   };
 
   const handleUpdateMealPlan = (mealPlan: MealPlan) => {
@@ -214,6 +222,7 @@ const App: React.FC = () => {
             onUpdateMealPlan={handleUpdateMealPlan}
             onDeleteMealPlan={handleDeleteMealPlan}
             onUpdateInventory={setInventory}
+            onAddMealLog={handleAddMealLog}
           />
         );
       case 'scan':
@@ -225,6 +234,7 @@ const App: React.FC = () => {
             budgetData={budgetData} 
             priceHistory={priceHistory} 
             lifespanData={lifespanData}
+            mealLogs={mealLogs}
             currency={currency}
             onUpdateCurrency={setCurrency}
             onUpdateBudget={(budget) => setBudgetData(prev => ({ ...prev, monthlyBudget: budget }))}
@@ -233,6 +243,7 @@ const App: React.FC = () => {
               setPriceHistory({});
               setBudgetData({ monthlyBudget: 800, months: {} });
               setLifespanData({});
+              setMealLogs([]);
             }}
           />
         );

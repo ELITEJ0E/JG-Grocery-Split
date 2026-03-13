@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { InventoryItem, Recipe, MealPlan, ShoppingListItem, Category } from '../types';
-import { Plus, Search, Trash2, CheckCircle2, Circle, Download, Upload, AlertCircle, ChevronDown, PackagePlus, Camera, Check, FileText, Copy, ClipboardPaste } from 'lucide-react';
+import { Plus, Search, Trash2, CheckCircle2, Circle, AlertCircle, ChevronDown, PackagePlus, Camera, Check, FileText, Copy, ClipboardPaste } from 'lucide-react';
 import { clsx } from 'clsx';
 import { differenceInDays } from 'date-fns';
 import { getCategoryEmoji } from '../utils';
@@ -190,35 +190,6 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   const handleClearPurchased = () => {
     onUpdateShoppingList(shoppingList.filter(item => !item.purchased));
-  };
-
-  const handleExport = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(shoppingList, null, 2));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "shopping_list.json");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const importedList = JSON.parse(event.target?.result as string);
-          if (Array.isArray(importedList)) {
-            onUpdateShoppingList(importedList);
-          }
-        } catch (error) {
-          console.error("Error parsing JSON", error);
-          alert("Invalid JSON file");
-        }
-      };
-      reader.readAsText(file);
-    }
   };
 
   const handleTextExport = () => {
@@ -444,16 +415,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         )}
 
         {/* Export/Import */}
-        <div className="flex flex-wrap gap-3 pt-6 border-t border-slate-200/60">
-          <button onClick={handleExport} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-2xl text-xs hover:bg-slate-50 shadow-sm transition-all active:scale-95">
-            <Download size={16} /> JSON Export
-          </button>
-          <label className="flex-1 min-w-[100px] flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-2xl text-xs hover:bg-slate-50 cursor-pointer shadow-sm transition-all active:scale-95">
-            <Upload size={16} /> JSON Import
-            <input type="file" accept=".json" onChange={handleImport} className="hidden" />
-          </label>
-          <button onClick={handleTextExport} className="w-full bg-white border border-slate-100 text-[#38BDF8] py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
-            <FileText size={18} /> WhatsApp / Notes Format
+        <div className="pt-6 border-t border-slate-200/60">
+          <button onClick={handleTextExport} className="w-full bg-white border border-slate-100 text-[#38BDF8] py-3.5 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 shadow-sm hover:bg-slate-50 transition-all active:scale-95">
+            <FileText size={22} className="text-[#38BDF8]" /> WhatsApp / Notes Format
           </button>
         </div>
       </div>
@@ -485,7 +449,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             </button>
             <button
               onClick={handleTextImport}
-              className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="bg-gradient-to-r from-[#38BDF8] to-sky-500 text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <ClipboardPaste size={18} /> Import Text
             </button>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { InventoryItem, Recipe, MealPlan, RecipeIngredient } from '../types';
-import { Plus, Search, Calendar, BookOpen, Download, Upload, Trash2, Edit2, AlertCircle, CheckCircle2, X, FileText, Copy, ClipboardPaste } from 'lucide-react';
+import { InventoryItem, Recipe, MealPlan, RecipeIngredient, MealLog } from '../types';
+import { Plus, Search, Calendar, BookOpen, Trash2, Edit2, AlertCircle, CheckCircle2, X, FileText, Copy, ClipboardPaste } from 'lucide-react';
 import { format, addDays, parseISO, isSameDay } from 'date-fns';
 import { clsx } from 'clsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -19,6 +19,7 @@ interface MealPlannerViewProps {
   onUpdateMealPlan: (mealPlan: MealPlan) => void;
   onDeleteMealPlan: (id: string) => void;
   onUpdateInventory: (items: InventoryItem[]) => void;
+  onAddMealLog?: (mealLog: MealLog) => void;
 }
 
 const MealPlannerView: React.FC<MealPlannerViewProps> = ({
@@ -32,6 +33,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
   onUpdateMealPlan,
   onDeleteMealPlan,
   onUpdateInventory,
+  onAddMealLog,
 }) => {
   const [activeTab, setActiveTab] = useState<'plan' | 'recipes'>('plan');
   
@@ -41,7 +43,6 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
   const [isTextImportExportOpen, setIsTextImportExportOpen] = useState(false);
   const [textData, setTextData] = useState('');
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Meal Plan State
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
@@ -85,42 +86,6 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
     setRecipeForm({ ingredients: [] });
   };
 
-  const handleExportRecipes = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(recipes));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "recipes.json");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-  };
-
-  const handleImportRecipes = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const imported = JSON.parse(e.target?.result as string);
-        if (Array.isArray(imported)) {
-          // Basic validation
-          const validRecipes = imported.filter(r => r.id && r.name && Array.isArray(r.ingredients));
-          validRecipes.forEach(r => {
-            if (!recipes.some(existing => existing.id === r.id)) {
-              onAddRecipe(r);
-            }
-          });
-          alert(`Imported ${validRecipes.length} recipes successfully.`);
-        }
-      } catch (err) {
-        alert('Invalid JSON file.');
-      }
-    };
-    reader.readAsText(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
   const handleTextExport = () => {
     const text = exportRecipesToText(recipes);
     setTextData(text);
@@ -161,6 +126,8 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
     // Deduct from inventory
     const updatedInventory = [...inventory];
     const assignedItemsForPlan: { inventoryItemId: string; quantity: number }[] = [];
+    let totalCost = 0;
+    const ingredientsUsed: MealLog['ingredients'] = [];
 
     for (const assignment of planForm.assignedItems) {
       if (assignment.inventoryItemId && assignment.quantity > 0) {
@@ -170,6 +137,16 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
           if (item.quantity < assignment.quantity) {
             return alert(`Not enough ${item.name} in inventory!`);
           }
+          
+          const cost = item.unitPrice * assignment.quantity;
+          totalCost += cost;
+          ingredientsUsed.push({
+            name: item.name,
+            quantity: assignment.quantity,
+            unit: item.unit,
+            cost: cost
+          });
+
           updatedInventory[itemIndex] = { ...item, quantity: item.quantity - assignment.quantity };
           if (updatedInventory[itemIndex].quantity === 0) {
             updatedInventory[itemIndex].isUsed = true;
@@ -177,6 +154,18 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
           assignedItemsForPlan.push({ inventoryItemId: assignment.inventoryItemId, quantity: assignment.quantity });
         }
       }
+    }
+
+    const recipe = recipes.find(r => r.id === planForm.recipeId);
+    if (recipe && ingredientsUsed.length > 0 && onAddMealLog) {
+      onAddMealLog({
+        id: crypto.randomUUID(),
+        recipeId: recipe.id,
+        recipeName: recipe.name,
+        date: planForm.date,
+        cost: totalCost,
+        ingredients: ingredientsUsed
+      });
     }
 
     onUpdateInventory(updatedInventory);
@@ -262,16 +251,9 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button onClick={handleExportRecipes} className="flex-1 min-w-[100px] bg-white border border-slate-100 text-slate-600 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
-                <Download size={16} /> JSON Export
+              <button onClick={handleTextExport} className="w-full bg-white border border-slate-100 text-[#4ADE80] py-3.5 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 shadow-sm hover:bg-slate-50 transition-all active:scale-95">
+                <FileText size={22} className="text-[#4ADE80]" /> WhatsApp / Notes Format
               </button>
-              <button onClick={() => fileInputRef.current?.click()} className="flex-1 min-w-[100px] bg-white border border-slate-100 text-slate-600 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
-                <Upload size={16} /> JSON Import
-              </button>
-              <button onClick={handleTextExport} className="w-full bg-white border border-slate-100 text-[#4ADE80] py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm transition-all active:scale-95">
-                <FileText size={18} /> WhatsApp / Notes Format
-              </button>
-              <input type="file" accept=".json" ref={fileInputRef} onChange={handleImportRecipes} className="hidden" />
             </div>
 
             <div className="grid gap-4">
@@ -407,7 +389,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
             </button>
             <button
               onClick={handleTextImport}
-              className="bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="bg-gradient-to-r from-[#4ADE80] to-emerald-500 text-white font-bold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <ClipboardPaste size={18} /> Import Text
             </button>

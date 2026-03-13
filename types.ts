@@ -77,6 +77,20 @@ export interface MealPlan {
   }[];
 }
 
+export interface MealLog {
+  id: string;
+  recipeId: string;
+  recipeName: string;
+  date: string; // YYYY-MM-DD
+  cost: number;
+  ingredients: {
+    name: string;
+    quantity: number;
+    unit: string;
+    cost: number;
+  }[];
+}
+
 export interface ShoppingListItem {
   id: string;
   name: string;
