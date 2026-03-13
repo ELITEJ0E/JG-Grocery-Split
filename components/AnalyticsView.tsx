@@ -355,9 +355,9 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <h3 className="font-extrabold text-slate-800 text-lg">Spend by Category</h3>
           </div>
           
-          {categoryData.length > 0 ? (
-            <>
-              <div className="h-64 relative">
+          <div className="h-64 relative">
+            {categoryData.length > 0 ? (
+              <>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -386,168 +386,203 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Total</span>
                   <span className="text-slate-800 font-black text-xl">{formatCurrency(totalSpent)}</span>
                 </div>
+              </>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                <PieChartIcon size={32} className="text-slate-300 mb-2" />
+                <p className="text-xs font-bold text-slate-400">No data to display</p>
               </div>
-              <div className="flex flex-wrap gap-2 justify-center mt-6">
-                {categoryData.map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-2 text-[10px] font-bold text-slate-600 capitalize bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-                    <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                    {getCategoryEmoji(entry.name)} {entry.name}
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
-              <PieChartIcon size={40} className="mx-auto mb-3 text-slate-300" />
-              <p className="font-medium">No spending data yet.</p>
+            )}
+          </div>
+          
+          {categoryData.length > 0 && (
+            <div className="flex flex-wrap gap-2 justify-center mt-6">
+              {categoryData.map((entry, index) => (
+                <div key={entry.name} className="flex items-center gap-2 text-[10px] font-bold text-slate-600 capitalize bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                  <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                  {getCategoryEmoji(entry.name)} {entry.name}
+                </div>
+              ))}
             </div>
           )}
         </div>
 
         {/* 4. Price Trends */}
-        {Object.keys(priceHistory).length > 0 && (
-          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp size={20} className="text-indigo-500" />
-              <h3 className="font-extrabold text-slate-800 text-lg">Price Trends</h3>
-            </div>
-            <Select value={selectedPriceItem} onValueChange={setSelectedPriceItem}>
-              <SelectTrigger className="w-full mb-4">
-                <SelectValue placeholder="Select an item" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(priceHistory).map(item => (
-                  <SelectItem key={item} value={item} className="capitalize">{item}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedPriceItem && priceHistory[selectedPriceItem] && (
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={priceHistory[selectedPriceItem]}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="date" tickFormatter={(val) => format(new Date(val), 'MMM d')} fontSize={10} tickLine={false} axisLine={false} />
-                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${currency.symbol}${val}`} />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} labelFormatter={(label) => format(new Date(label), 'MMM d, yyyy')} />
-                    <Line type="monotone" dataKey="price" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={20} className="text-indigo-500" />
+            <h3 className="font-extrabold text-slate-800 text-lg">Price Trends</h3>
+          </div>
+          
+          <Select 
+            value={selectedPriceItem} 
+            onValueChange={setSelectedPriceItem}
+            disabled={Object.keys(priceHistory).length === 0}
+          >
+            <SelectTrigger className="w-full mb-4">
+              <SelectValue placeholder={Object.keys(priceHistory).length === 0 ? "No items tracked" : "Select an item"} />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(priceHistory).map(item => (
+                <SelectItem key={item} value={item} className="capitalize">{item}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="h-48">
+            {selectedPriceItem && priceHistory[selectedPriceItem] && priceHistory[selectedPriceItem].length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={priceHistory[selectedPriceItem]}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" tickFormatter={(val) => format(new Date(val), 'MMM d')} fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${currency.symbol}${val}`} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} labelFormatter={(label) => format(new Date(label), 'MMM d, yyyy')} />
+                  <Line type="monotone" dataKey="price" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 border-dashed text-slate-400">
+                <TrendingUp size={32} className="text-slate-300 mb-2" />
+                <p className="text-xs font-bold">Scan receipts to see price trends</p>
               </div>
             )}
           </div>
-        )}
+        </div>
 
         {/* 5. Store Comparison */}
-        {Object.keys(storePrices).length > 0 && (
-          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
-            <div className="flex items-center gap-2 mb-4">
-              <Store size={20} className="text-orange-500" />
-              <h3 className="font-extrabold text-slate-800 text-lg">Store Comparison</h3>
-            </div>
-            <Select value={selectedStoreItem} onValueChange={setSelectedStoreItem}>
-              <SelectTrigger className="w-full mb-4">
-                <SelectValue placeholder="Select an item" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(storePrices).map(item => (
-                  <SelectItem key={item} value={item} className="capitalize">{item}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedStoreItem && storePrices[selectedStoreItem] && (
-              <div className="space-y-3">
-                {storePrices[selectedStoreItem].sort((a, b) => a.price - b.price).map((sp, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="font-bold text-slate-700">{sp.store || 'Unknown Store'}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-slate-800">{formatCurrency(sp.price)}</span>
-                      {idx === 0 && <span className="text-[10px] font-bold bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Cheapest</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+          <div className="flex items-center gap-2 mb-4">
+            <Store size={20} className="text-orange-500" />
+            <h3 className="font-extrabold text-slate-800 text-lg">Store Comparison</h3>
           </div>
-        )}
+          
+          <Select 
+            value={selectedStoreItem} 
+            onValueChange={setSelectedStoreItem}
+            disabled={Object.keys(storePrices).length === 0}
+          >
+            <SelectTrigger className="w-full mb-4">
+              <SelectValue placeholder={Object.keys(storePrices).length === 0 ? "No items tracked" : "Select an item"} />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(storePrices).map(item => (
+                <SelectItem key={item} value={item} className="capitalize">{item}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {selectedStoreItem && storePrices[selectedStoreItem] && storePrices[selectedStoreItem].length > 0 ? (
+            <div className="space-y-3">
+              {storePrices[selectedStoreItem].sort((a, b) => a.price - b.price).map((sp, idx) => (
+                <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="font-bold text-slate-700">{sp.store || 'Unknown Store'}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-slate-800">{formatCurrency(sp.price)}</span>
+                    {idx === 0 && <span className="text-[10px] font-bold bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Cheapest</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
+              <Store size={32} className="mx-auto mb-2 text-slate-300" />
+              <p className="text-sm font-medium">Compare prices between stores.</p>
+            </div>
+          )}
+        </div>
 
         {/* Meal Cost Analytics */}
-        {mealLogs.length > 0 && mealStats && (
-          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
-            <div className="flex items-center gap-2 mb-6">
-              <Utensils size={20} className="text-indigo-500" />
-              <h3 className="font-extrabold text-slate-800 text-lg">Meal Cost Analytics</h3>
-            </div>
-
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50">
-                <p className="text-xs font-bold text-indigo-600/70 uppercase tracking-wider mb-1">Weekly Cost</p>
-                <p className="text-2xl font-black text-indigo-700">{formatCurrency(mealStats.weeklyCost)}</p>
-                <p className="text-[10px] font-bold text-indigo-500 mt-1">{mealStats.weeklyCount} meals cooked</p>
-              </div>
-              <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
-                <p className="text-xs font-bold text-emerald-600/70 uppercase tracking-wider mb-1">Avg Meal</p>
-                <p className="text-2xl font-black text-emerald-700">{formatCurrency(mealStats.avgCost)}</p>
-              </div>
-            </div>
-
-            {/* Meal Cost Chart */}
-            {mealCostData.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-sm font-bold text-slate-600 mb-3">Cost Over Time</h4>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={mealCostData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${currency.symbol}${val}`} />
-                      <Tooltip 
-                        formatter={(value: number) => formatCurrency(value)}
-                        labelFormatter={(label) => `Date: ${label}`}
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
-                      />
-                      <Line type="monotone" dataKey="cost" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} name="Meal Cost" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-
-            {/* Ingredient Usage Chart */}
-            {ingredientUsageData.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-sm font-bold text-slate-600 mb-3">Top Ingredients Used</h4>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={ingredientUsageData} layout="vertical" margin={{ top: 0, right: 0, left: 20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                      <XAxis type="number" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis dataKey="name" type="category" fontSize={10} tickLine={false} axisLine={false} width={80} />
-                      <Tooltip 
-                        formatter={(value: number) => value}
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
-                      />
-                      <Bar dataKey="quantity" fill="#38BDF8" radius={[0, 4, 4, 0]} barSize={20} name="Quantity Used" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-
-            {/* Insights */}
-            {mealInsights.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-bold text-slate-600 mb-2">Insights</h4>
-                {mealInsights.map((insight, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <span className="text-indigo-500 mt-0.5">•</span>
-                    <span className="font-medium">{insight}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+          <div className="flex items-center gap-2 mb-6">
+            <Utensils size={20} className="text-indigo-500" />
+            <h3 className="font-extrabold text-slate-800 text-lg">Meal Cost Analytics</h3>
           </div>
-        )}
+
+          {/* Summary Stats */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50">
+              <p className="text-xs font-bold text-indigo-600/70 uppercase tracking-wider mb-1">Weekly Cost</p>
+              <p className="text-2xl font-black text-indigo-700">{formatCurrency(mealStats?.weeklyCost || 0)}</p>
+              <p className="text-[10px] font-bold text-indigo-500 mt-1">{mealStats?.weeklyCount || 0} meals cooked</p>
+            </div>
+            <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
+              <p className="text-xs font-bold text-emerald-600/70 uppercase tracking-wider mb-1">Avg Meal</p>
+              <p className="text-2xl font-black text-emerald-700">{formatCurrency(mealStats?.avgCost || 0)}</p>
+            </div>
+          </div>
+
+          {/* Meal Cost Chart */}
+          <div className="mb-6">
+            <h4 className="text-sm font-bold text-slate-600 mb-3">Cost Over Time</h4>
+            <div className="h-48">
+              {mealCostData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={mealCostData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${currency.symbol}${val}`} />
+                    <Tooltip 
+                      formatter={(value: number) => formatCurrency(value)}
+                      labelFormatter={(label) => `Date: ${label}`}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
+                    />
+                    <Line type="monotone" dataKey="cost" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} name="Meal Cost" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 border-dashed text-slate-400">
+                  <Activity size={32} className="text-slate-300 mb-2" />
+                  <p className="text-xs font-bold">No meal cost data yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Ingredient Usage Chart */}
+          <div className="mb-6">
+            <h4 className="text-sm font-bold text-slate-600 mb-3">Top Ingredients Used</h4>
+            <div className="h-48">
+              {ingredientUsageData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ingredientUsageData} layout="vertical" margin={{ top: 0, right: 0, left: 20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis dataKey="name" type="category" fontSize={10} tickLine={false} axisLine={false} width={80} />
+                    <Tooltip 
+                      formatter={(value: number) => value}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
+                    />
+                    <Bar dataKey="quantity" fill="#38BDF8" radius={[0, 4, 4, 0]} barSize={20} name="Quantity Used" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 border-dashed text-slate-400">
+                  <Utensils size={32} className="text-slate-300 mb-2" />
+                  <p className="text-xs font-bold">No ingredient usage data</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Insights */}
+          {mealLogs.length > 0 && mealInsights.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-slate-600 mb-2">Insights</h4>
+              {mealInsights.map((insight, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-indigo-500 mt-0.5">•</span>
+                  <span className="font-medium">{insight}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {mealLogs.length === 0 && (
+            <div className="text-center py-4 text-slate-400">
+              <p className="text-xs font-bold">Plan meals to track cooking costs and insights.</p>
+            </div>
+          )}
+        </div>
 
         {/* 6. Nutrition Balance */}
         <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
@@ -555,41 +590,46 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <Activity size={20} className="text-emerald-500" />
             <h3 className="font-extrabold text-slate-800 text-lg">Nutrition Balance</h3>
           </div>
-          {nutritionData.length > 0 ? (
-            <>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={nutritionData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={5} dataKey="value">
-                      {nutritionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={NUTRITION_COLORS[entry.name] || '#94A3B8'} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+          
+          <div className="h-48 relative">
+            {nutritionData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={nutritionData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={5} dataKey="value">
+                    {nutritionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={NUTRITION_COLORS[entry.name] || '#94A3B8'} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                <Activity size={32} className="text-slate-300 mb-2" />
+                <p className="text-xs font-bold text-slate-400">No data to display</p>
               </div>
-              <div className="flex flex-wrap gap-2 justify-center mt-2">
-                {nutritionData.map(entry => (
-                  <div key={entry.name} className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: NUTRITION_COLORS[entry.name] || '#94A3B8' }} />
-                    {entry.name}
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-slate-500 italic text-center py-4">Add groceries to see nutrition insights.</p>
+            )}
+          </div>
+
+          {nutritionData.length > 0 && (
+            <div className="flex flex-wrap gap-2 justify-center mt-2">
+              {nutritionData.map(entry => (
+                <div key={entry.name} className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: NUTRITION_COLORS[entry.name] || '#94A3B8' }} />
+                  {entry.name}
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
         {/* 7. Lifespan Intelligence */}
-        {Object.keys(lifespanData).length > 0 && (
-          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock size={20} className="text-cyan-500" />
-              <h3 className="font-extrabold text-slate-800 text-lg">Lifespan Intelligence</h3>
-            </div>
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock size={20} className="text-cyan-500" />
+            <h3 className="font-extrabold text-slate-800 text-lg">Lifespan Intelligence</h3>
+          </div>
+          {Object.keys(lifespanData).length > 0 ? (
             <div className="space-y-3">
               {Object.entries(lifespanData).sort((a, b) => a[0].localeCompare(b[0])).slice(0, 10).map(([item, data]) => (
                 <div key={item} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -598,16 +638,21 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
+              <Clock size={32} className="mx-auto mb-2 text-slate-300" />
+              <p className="text-sm font-medium">Track usage to see lifespan intelligence.</p>
+            </div>
+          )}
+        </div>
 
         {/* Top Wasted List */}
-        {topWasted.length > 0 && (
-          <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
-            <div className="flex items-center gap-2 mb-5">
-              <TrendingDown size={20} className="text-rose-500" />
-              <h3 className="font-extrabold text-slate-800 text-lg">Top Wasted Items 🥀</h3>
-            </div>
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 animate-spring-up">
+          <div className="flex items-center gap-2 mb-5">
+            <TrendingDown size={20} className="text-rose-500" />
+            <h3 className="font-extrabold text-slate-800 text-lg">Top Wasted Items 🥀</h3>
+          </div>
+          {topWasted.length > 0 ? (
             <div className="space-y-3">
               {topWasted.map((item, idx) => (
                 <div key={idx} className="flex justify-between items-center p-4 bg-rose-50/50 rounded-2xl border border-rose-100/50">
@@ -626,8 +671,13 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
+              <TrendingDown size={32} className="mx-auto mb-2 text-slate-300" />
+              <p className="text-sm font-medium">Great job! No wasted items recorded yet.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
