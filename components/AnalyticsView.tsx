@@ -165,7 +165,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
       )}
 
-      <div className="bg-white/60 backdrop-blur-xl px-6 pt-8 pb-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-10 rounded-b-3xl flex justify-between items-center">
+      <div className="bg-white/60 backdrop-blur-xl px-6 pt-8 pb-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-0 z-50 rounded-b-3xl flex justify-between items-center">
         <h1 className="text-3xl font-extrabold text-[#1E293B] tracking-tight">Stats 📊</h1>
         <div className="flex items-center gap-2">
           <button 
