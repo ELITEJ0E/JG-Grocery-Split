@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { InventoryItem, Category, Currency } from '../types';
+import { InventoryItem, Category, Currency, CustomCategory } from '../types';
 import { Check, X, Edit2, Trash2, Plus, PackageOpen } from 'lucide-react';
 import { addDays } from 'date-fns';
 import { getCategoryEmoji } from '../utils';
@@ -8,13 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 interface VerificationViewProps {
   items: Partial<InventoryItem>[];
   currency: Currency;
+  customCategories?: CustomCategory[];
   onConfirm: (items: InventoryItem[]) => void;
   onCancel: () => void;
 }
 
-const CATEGORIES: Category[] = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other'];
+const DEFAULT_CATEGORIES: Category[] = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other'];
 
-const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems, currency, onConfirm, onCancel }) => {
+const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems, currency, customCategories = [], onConfirm, onCancel }) => {
+  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories.map(c => c.name)];
   const [items, setItems] = useState<Partial<InventoryItem>[]>(initialItems);
 
   const handleUpdate = (index: number, field: keyof InventoryItem, value: any) => {
@@ -166,9 +168,9 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CATEGORIES.map(cat => (
+                        {allCategories.map(cat => (
                           <SelectItem key={cat} value={cat} className="capitalize">
-                            <span className="mr-2">{getCategoryEmoji(cat)}</span>
+                            <span className="mr-2">{getCategoryEmoji(cat, customCategories)}</span>
                             {cat}
                           </SelectItem>
                         ))}

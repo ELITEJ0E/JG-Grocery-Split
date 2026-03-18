@@ -6,7 +6,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const getCategoryEmoji = (category: Category | string): string => {
+export const getCategoryEmoji = (category: Category | string, customCategories?: {name: string, emoji: string}[]): string => {
+  if (customCategories) {
+    const custom = customCategories.find(c => c.name.toLowerCase() === category.toLowerCase());
+    if (custom) return custom.emoji;
+  }
   switch (category.toLowerCase()) {
     case 'produce': return '🥬';
     case 'dairy': return '🥛';

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -40,10 +41,10 @@ const Sheet: React.FC<SheetProps> = ({
 
   if (!shouldRender) return null;
 
-  return (
+  return createPortal(
     <div 
       className={clsx(
-        "fixed inset-0 z-[100] flex items-end justify-center p-4 transition-opacity duration-300",
+        "fixed inset-0 z-[9999] flex items-end justify-center transition-opacity duration-300",
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
     >
@@ -56,7 +57,7 @@ const Sheet: React.FC<SheetProps> = ({
       {/* Sheet Content */}
       <div 
         className={clsx(
-          "bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl relative z-10 transition-transform duration-300 ease-spring",
+          "bg-white rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 shadow-2xl relative z-10 transition-transform duration-300 ease-spring",
           isOpen ? "translate-y-0" : "translate-y-full",
           className
         )}
@@ -76,7 +77,7 @@ const Sheet: React.FC<SheetProps> = ({
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[70vh] no-scrollbar">
+        <div className="overflow-y-auto max-h-[80vh] no-scrollbar">
           {children}
         </div>
 
@@ -86,7 +87,8 @@ const Sheet: React.FC<SheetProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

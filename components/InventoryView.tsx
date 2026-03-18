@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
-import { InventoryItem, Category, MealPlan, Recipe } from '../types';
-import { Search, Trash2, AlertCircle, Check } from 'lucide-react';
+import { InventoryItem, Category, MealPlan, Recipe, CustomCategory } from '../types';
+import { Search, Trash2, AlertCircle, Check, Plus } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
 import { clsx } from 'clsx';
 import { getCategoryEmoji, getCategoryColor } from '../utils';
+import Sheet from './ui/Sheet';
 
 interface InventoryViewProps {
   items: InventoryItem[];
   mealPlans: MealPlan[];
   recipes: Recipe[];
+  customCategories?: CustomCategory[];
+  onAddCustomCategory?: (category: CustomCategory) => void;
   onUpdateItem: (item: InventoryItem) => void;
   onDeleteItem: (id: string) => void;
 }
 
-const CATEGORIES: Category[] = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other'];
+const DEFAULT_CATEGORIES: Category[] = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other'];
 
-const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes, onUpdateItem, onDeleteItem }) => {
+const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes, customCategories = [], onAddCustomCategory, onUpdateItem, onDeleteItem }) => {
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<Category | 'all'>('all');
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryEmoji, setNewCategoryEmoji] = useState('📦');
+
+  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories.map(c => c.name)];
 
   const activeItems = items.filter(item => !item.isUsed && !item.isWasted);
 
@@ -67,7 +75,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
           >
             All Items
           </button>
-          {CATEGORIES.map((cat) => (
+          {allCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => setFilterCategory(cat)}
@@ -78,10 +86,18 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
                   : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-100"
               )}
             >
-              <span>{getCategoryEmoji(cat)}</span>
+              <span>{getCategoryEmoji(cat, customCategories)}</span>
               {cat}
             </button>
           ))}
+          {onAddCustomCategory && (
+            <button
+              onClick={() => setIsAddCategoryOpen(true)}
+              className="px-4 py-2 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-300 flex items-center gap-2 shadow-sm bg-white text-slate-600 hover:bg-slate-50 border border-slate-100 border-dashed"
+            >
+              <Plus size={16} /> Add Category
+            </button>
+          )}
         </div>
       </div>
 
@@ -180,6 +196,54 @@ const InventoryView: React.FC<InventoryViewProps> = ({ items, mealPlans, recipes
           </div>
         )}
       </div>
+      {/* Add Category Sheet */}
+      <Sheet
+        isOpen={isAddCategoryOpen}
+        onClose={() => setIsAddCategoryOpen(false)}
+        title="New Category ✨"
+      >
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Category Name</label>
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
+              placeholder="e.g., Snacks"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Emoji</label>
+            <input
+              type="text"
+              value={newCategoryEmoji}
+              onChange={(e) => setNewCategoryEmoji(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800 text-2xl"
+              placeholder="📦"
+              maxLength={2}
+            />
+          </div>
+          <button
+            onClick={() => {
+              if (newCategoryName.trim() && onAddCustomCategory) {
+                onAddCustomCategory({
+                  name: newCategoryName.trim(),
+                  emoji: newCategoryEmoji || '📦',
+                  color: 'bg-slate-100 text-slate-700 border-slate-200'
+                });
+                setNewCategoryName('');
+                setNewCategoryEmoji('📦');
+                setIsAddCategoryOpen(false);
+              }
+            }}
+            disabled={!newCategoryName.trim()}
+            className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+          >
+            Add Category
+          </button>
+        </div>
+      </Sheet>
     </div>
   );
 };

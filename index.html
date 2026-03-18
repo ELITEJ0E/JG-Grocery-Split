@@ -137,6 +137,62 @@
       .ease-spring {
         transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
       }
+
+      /* Custom Calendar Styles */
+      .react-calendar {
+        width: 100% !important;
+        border: none !important;
+        background: transparent !important;
+        font-family: 'Inter', sans-serif !important;
+      }
+      .react-calendar__navigation {
+        margin-bottom: 1rem !important;
+      }
+      .react-calendar__navigation button {
+        color: #1e293b !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+        border-radius: 0.75rem !important;
+      }
+      .react-calendar__navigation button:enabled:hover,
+      .react-calendar__navigation button:enabled:focus {
+        background-color: #f1f5f9 !important;
+      }
+      .react-calendar__month-view__weekdays {
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        font-size: 0.65rem !important;
+        color: #94a3b8 !important;
+        margin-bottom: 0.5rem !important;
+      }
+      .react-calendar__month-view__weekdays__weekday abbr {
+        text-decoration: none !important;
+      }
+      .react-calendar__tile {
+        padding: 0.8em 0.5em !important;
+        border-radius: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #334155 !important;
+        font-size: 0.875rem !important;
+        transition: all 0.2s ease !important;
+      }
+      .react-calendar__tile--active {
+        background: #4ade80 !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3) !important;
+      }
+      .react-calendar__tile--active:enabled:hover,
+      .react-calendar__tile--active:enabled:focus {
+        background: #22c55e !important;
+      }
+      .react-calendar__tile--now {
+        background: #f0fdf4 !important;
+        color: #16a34a !important;
+      }
+      .react-calendar__tile:enabled:hover,
+      .react-calendar__tile:enabled:focus {
+        background: #f1f5f9 !important;
+      }
     </style>
   <script type="importmap">
 {

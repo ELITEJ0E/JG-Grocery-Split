@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [scannedItems, setScannedItems] = useState<Partial<InventoryItem>[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [currency, setCurrency] = useState<Currency>(CURRENCIES[0]);
+  const [customCategories, setCustomCategories] = useState<{name: string, emoji: string}[]>([]);
 
   const [toast, setToast] = useState<{ message: string; type: ToastType; isVisible: boolean }>({
     message: '',
@@ -48,6 +49,7 @@ const App: React.FC = () => {
     const storedBudgetData = localStorage.getItem('budgetData');
     const storedLifespanData = localStorage.getItem('lifespanData');
     const storedCurrency = localStorage.getItem('currency');
+    const storedCustomCategories = localStorage.getItem('customCategories');
 
     if (storedInventory) setInventory(JSON.parse(storedInventory));
     if (storedRecipes) setRecipes(JSON.parse(storedRecipes));
@@ -58,6 +60,7 @@ const App: React.FC = () => {
     if (storedBudgetData) setBudgetData(JSON.parse(storedBudgetData));
     if (storedLifespanData) setLifespanData(JSON.parse(storedLifespanData));
     if (storedCurrency) setCurrency(JSON.parse(storedCurrency));
+    if (storedCustomCategories) setCustomCategories(JSON.parse(storedCustomCategories));
   }, []);
 
   useEffect(() => {
@@ -70,7 +73,8 @@ const App: React.FC = () => {
     localStorage.setItem('budgetData', JSON.stringify(budgetData));
     localStorage.setItem('lifespanData', JSON.stringify(lifespanData));
     localStorage.setItem('currency', JSON.stringify(currency));
-  }, [inventory, recipes, mealPlans, mealLogs, shoppingList, priceHistory, budgetData, lifespanData, currency]);
+    localStorage.setItem('customCategories', JSON.stringify(customCategories));
+  }, [inventory, recipes, mealPlans, mealLogs, shoppingList, priceHistory, budgetData, lifespanData, currency, customCategories]);
 
   const handleAddMealLog = (mealLog: MealLog) => {
     setMealLogs(prev => [...prev, mealLog]);
@@ -197,6 +201,7 @@ const App: React.FC = () => {
         <VerificationView
           items={scannedItems}
           currency={currency}
+          customCategories={customCategories}
           onConfirm={handleConfirmItems}
           onCancel={() => {
             setIsVerifying(false);
@@ -214,19 +219,22 @@ const App: React.FC = () => {
             items={inventory}
             recipes={recipes}
             mealPlans={mealPlans}
+            customCategories={customCategories}
             onUpdateItem={handleUpdateItem}
             onDeleteItem={handleDeleteItem}
             onNavigate={setView}
           />
         );
       case 'inventory':
-        return <InventoryView items={inventory} mealPlans={mealPlans} recipes={recipes} onUpdateItem={handleUpdateItem} onDeleteItem={handleDeleteItem} />;
+        return <InventoryView items={inventory} mealPlans={mealPlans} recipes={recipes} customCategories={customCategories} onAddCustomCategory={(c) => setCustomCategories([...customCategories, c])} onUpdateItem={handleUpdateItem} onDeleteItem={handleDeleteItem} />;
       case 'planner':
         return (
           <MealPlannerView
             recipes={recipes}
             mealPlans={mealPlans}
             inventory={inventory}
+            mealLogs={mealLogs}
+            customCategories={customCategories}
             onAddRecipe={handleAddRecipe}
             onUpdateRecipe={handleUpdateRecipe}
             onDeleteRecipe={handleDeleteRecipe}
@@ -235,6 +243,8 @@ const App: React.FC = () => {
             onDeleteMealPlan={handleDeleteMealPlan}
             onUpdateInventory={setInventory}
             onAddMealLog={handleAddMealLog}
+            onUpdateMealLog={(log) => setMealLogs(prev => prev.map(l => l.id === log.id ? log : l))}
+            onDeleteMealLog={(id) => setMealLogs(prev => prev.filter(l => l.id !== id))}
             onShowToast={showToast}
           />
         );
@@ -249,6 +259,7 @@ const App: React.FC = () => {
             lifespanData={lifespanData}
             mealLogs={mealLogs}
             currency={currency}
+            customCategories={customCategories}
             onUpdateCurrency={setCurrency}
             onUpdateBudget={(budget) => setBudgetData(prev => ({ ...prev, monthlyBudget: budget }))}
             onClearData={() => {
@@ -267,6 +278,7 @@ const App: React.FC = () => {
             recipes={recipes}
             mealPlans={mealPlans}
             shoppingList={shoppingList}
+            customCategories={customCategories}
             onUpdateShoppingList={setShoppingList}
             onAddToInventory={handleQuickAddInventory}
             onNavigateToScan={() => setView('scan')}
@@ -279,6 +291,7 @@ const App: React.FC = () => {
             items={inventory}
             recipes={recipes}
             mealPlans={mealPlans}
+            customCategories={customCategories}
             onUpdateItem={handleUpdateItem}
             onDeleteItem={handleDeleteItem}
             onNavigate={setView}

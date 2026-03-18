@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { InventoryItem, Recipe, MealPlan } from '../types';
+import { InventoryItem, Recipe, MealPlan, CustomCategory } from '../types';
 import { differenceInDays, parseISO, format, isSameDay } from 'date-fns';
 import { 
   AlertTriangle, 
@@ -24,6 +24,7 @@ interface KitchenDashboardViewProps {
   items: InventoryItem[];
   recipes: Recipe[];
   mealPlans: MealPlan[];
+  customCategories?: CustomCategory[];
   onUpdateItem: (item: InventoryItem) => void;
   onDeleteItem: (id: string) => void;
   onNavigate: (view: string) => void;
@@ -66,7 +67,7 @@ const getExpiryInfo = (expiryDate: string) => {
   };
 };
 
-const getItemEmoji = (item: InventoryItem): string => {
+const getItemEmoji = (item: InventoryItem, customCategories?: CustomCategory[]): string => {
   const name = item.name.toLowerCase();
   const emojiMap: Record<string, string> = {
     'milk': '🥛', 'egg': '🥚', 'cheese': '🧀', 'butter': '🧈',
@@ -85,22 +86,23 @@ const getItemEmoji = (item: InventoryItem): string => {
   for (const [key, emoji] of Object.entries(emojiMap)) {
     if (name.includes(key)) return emoji;
   }
-  return getCategoryEmoji(item.category);
+  return getCategoryEmoji(item.category, customCategories);
 };
 
 import Sheet from './ui/Sheet';
 
 interface ItemCardProps {
   item: InventoryItem;
+  customCategories?: CustomCategory[];
   onUpdate: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
   isShelf?: boolean;
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, isShelf = false }) => {
+const ItemCard: React.FC<ItemCardProps> = ({ item, customCategories, onUpdate, onDelete, isShelf = false }) => {
   const [expanded, setExpanded] = useState(false);
   const expiry = getExpiryInfo(item.expiryDate);
-  const emoji = getItemEmoji(item);
+  const emoji = getItemEmoji(item, customCategories);
 
   return (
     <>
@@ -226,9 +228,10 @@ const FridgeShelf: React.FC<{
   items: InventoryItem[];
   shelfNumber: number;
   isFreezer?: boolean;
+  customCategories?: CustomCategory[];
   onUpdateItem: (item: InventoryItem) => void;
   onDeleteItem: (id: string) => void;
-}> = ({ items, shelfNumber, isFreezer, onUpdateItem, onDeleteItem }) => {
+}> = ({ items, shelfNumber, isFreezer, customCategories, onUpdateItem, onDeleteItem }) => {
   // Split items into two columns for shelf display
   const leftItems = items.filter((_, i) => i % 2 === 0);
   const rightItems = items.filter((_, i) => i % 2 === 1);
@@ -250,10 +253,10 @@ const FridgeShelf: React.FC<{
       {/* Shelf content */}
       <div className="grid grid-cols-2 gap-2 mb-3">
         {leftItems.map(item => (
-          <ItemCard key={item.id} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} isShelf={true} />
+          <ItemCard key={item.id} item={item} customCategories={customCategories} onUpdate={onUpdateItem} onDelete={onDeleteItem} isShelf={true} />
         ))}
         {rightItems.map(item => (
-          <ItemCard key={item.id} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} isShelf={true} />
+          <ItemCard key={item.id} item={item} customCategories={customCategories} onUpdate={onUpdateItem} onDelete={onDeleteItem} isShelf={true} />
         ))}
       </div>
 
@@ -274,6 +277,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
   items, 
   recipes, 
   mealPlans, 
+  customCategories,
   onUpdateItem, 
   onDeleteItem, 
   onNavigate 
@@ -436,7 +440,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
               <div className="space-y-1.5">
                 {expiringSoon.slice(0, 3).map(item => (
                   <div key={item.id} className="flex items-center gap-2 text-xs bg-white/80 p-2 rounded-lg border border-amber-100">
-                    <span>{getItemEmoji(item)}</span>
+                    <span>{getItemEmoji(item, customCategories)}</span>
                     <span className="font-medium text-slate-700 flex-1 truncate">{item.name}</span>
                     <span className="text-amber-600 font-bold">
                       {differenceInDays(parseISO(item.expiryDate), new Date())}d
@@ -535,6 +539,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                         items={freezerItems.slice(0, Math.ceil(freezerItems.length / 2))} 
                         shelfNumber={1} 
                         isFreezer={true}
+                        customCategories={customCategories}
                         onUpdateItem={onUpdateItem}
                         onDeleteItem={onDeleteItem}
                       />
@@ -544,6 +549,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                         items={freezerItems.slice(Math.ceil(freezerItems.length / 2))} 
                         shelfNumber={2} 
                         isFreezer={true}
+                        customCategories={customCategories}
                         onUpdateItem={onUpdateItem}
                         onDeleteItem={onDeleteItem}
                       />
@@ -595,6 +601,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                       <FridgeShelf 
                         items={fridgeItems.slice(0, Math.ceil(fridgeItems.length / 3))} 
                         shelfNumber={1} 
+                        customCategories={customCategories}
                         onUpdateItem={onUpdateItem}
                         onDeleteItem={onDeleteItem}
                       />
@@ -603,6 +610,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                       <FridgeShelf 
                         items={fridgeItems.slice(Math.ceil(fridgeItems.length / 3), Math.ceil(2 * fridgeItems.length / 3))} 
                         shelfNumber={2} 
+                        customCategories={customCategories}
                         onUpdateItem={onUpdateItem}
                         onDeleteItem={onDeleteItem}
                       />
@@ -611,6 +619,7 @@ const KitchenDashboardView: React.FC<KitchenDashboardViewProps> = ({
                       <FridgeShelf 
                         items={fridgeItems.slice(Math.ceil(2 * fridgeItems.length / 3))} 
                         shelfNumber={3} 
+                        customCategories={customCategories}
                         onUpdateItem={onUpdateItem}
                         onDeleteItem={onDeleteItem}
                       />

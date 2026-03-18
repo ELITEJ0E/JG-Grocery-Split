@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { InventoryItem, BudgetData, PriceHistoryEntry, LifespanData, Currency, CURRENCIES, MealLog } from '../types';
+import { InventoryItem, BudgetData, PriceHistoryEntry, LifespanData, Currency, CURRENCIES, MealLog, CustomCategory } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, Trash2, PieChart as PieChartIcon, AlertTriangle, Activity, Store, Clock, Utensils } from 'lucide-react';
 import { getCategoryEmoji } from '../utils';
@@ -14,6 +14,7 @@ interface AnalyticsViewProps {
   lifespanData?: LifespanData;
   mealLogs?: MealLog[];
   currency: Currency;
+  customCategories?: CustomCategory[];
   onUpdateCurrency: (currency: Currency) => void;
   onUpdateBudget: (budget: number) => void;
   onClearData: () => void;
@@ -37,6 +38,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   lifespanData = {},
   mealLogs = [],
   currency,
+  customCategories,
   onUpdateCurrency,
   onUpdateBudget,
   onClearData
@@ -401,7 +403,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               {categoryData.map((entry, index) => (
                 <div key={entry.name} className="flex items-center gap-2 text-[10px] font-bold text-slate-600 capitalize bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
                   <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                  {getCategoryEmoji(entry.name)} {entry.name}
+                  {getCategoryEmoji(entry.name, customCategories)} {entry.name}
                 </div>
               ))}
             </div>
@@ -659,7 +661,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <div key={idx} className="flex justify-between items-center p-4 bg-rose-50/50 rounded-2xl border border-rose-100/50">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm border border-rose-100">
-                      {getCategoryEmoji(item.category)}
+                      {getCategoryEmoji(item.category, customCategories)}
                     </div>
                     <div>
                       <p className="font-bold text-slate-800 capitalize">{item.name}</p>

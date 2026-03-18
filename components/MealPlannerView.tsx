@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
+import CalendarComponent from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import { InventoryItem, Recipe, MealPlan, RecipeIngredient, MealLog } from '../types';
 import { ToastType } from './ui/Toast';
 import { Plus, Search, Calendar, BookOpen, Trash2, Edit2, AlertCircle, CheckCircle2, X, FileText, Copy, ClipboardPaste } from 'lucide-react';
@@ -13,6 +15,7 @@ interface MealPlannerViewProps {
   recipes: Recipe[];
   mealPlans: MealPlan[];
   inventory: InventoryItem[];
+  mealLogs?: MealLog[];
   onAddRecipe: (recipe: Recipe) => void;
   onUpdateRecipe: (recipe: Recipe) => void;
   onDeleteRecipe: (id: string) => void;
@@ -21,6 +24,8 @@ interface MealPlannerViewProps {
   onDeleteMealPlan: (id: string) => void;
   onUpdateInventory: (items: InventoryItem[]) => void;
   onAddMealLog?: (mealLog: MealLog) => void;
+  onUpdateMealLog?: (mealLog: MealLog) => void;
+  onDeleteMealLog?: (id: string) => void;
   onShowToast?: (message: string, type?: ToastType) => void;
 }
 
@@ -28,6 +33,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
   recipes,
   mealPlans,
   inventory,
+  mealLogs = [],
   onAddRecipe,
   onUpdateRecipe,
   onDeleteRecipe,
@@ -36,9 +42,11 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
   onDeleteMealPlan,
   onUpdateInventory,
   onAddMealLog,
+  onUpdateMealLog,
+  onDeleteMealLog,
   onShowToast,
 }) => {
-  const [activeTab, setActiveTab] = useState<'plan' | 'recipes'>('plan');
+  const [activeTab, setActiveTab] = useState<'plan' | 'recipes' | 'logs'>('plan');
   
   // Recipe State
   const [searchRecipe, setSearchRecipe] = useState('');
@@ -51,11 +59,18 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
 
+  // Meal Log State
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [editingLog, setEditingLog] = useState<MealLog | null>(null);
+  const [logForm, setLogForm] = useState<Partial<MealLog>>({ ingredients: [] });
+
   // Form States
   const [recipeForm, setRecipeForm] = useState<Partial<Recipe>>({ ingredients: [] });
-  const [planForm, setPlanForm] = useState<{ recipeId: string; date: string; assignedItems: { ingredientIndex: number; inventoryItemId: string; quantity: number }[] }>({
+  const [planForm, setPlanForm] = useState<{ recipeId: string; date: string; servings: number; assignedItems: { ingredientIndex: number; inventoryItemId: string; quantity: number }[] }>({
     recipeId: '',
     date: format(new Date(), 'yyyy-MM-dd'),
+    servings: 1,
     assignedItems: []
   });
 
@@ -155,11 +170,6 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
         const itemIndex = updatedInventory.findIndex(i => i.id === assignment.inventoryItemId);
         if (itemIndex >= 0) {
           const item = updatedInventory[itemIndex];
-          if (item.quantity < assignment.quantity) {
-            if (onShowToast) onShowToast(`Not enough ${item.name} in inventory!`, 'error');
-            else alert(`Not enough ${item.name} in inventory!`);
-            return;
-          }
           
           const cost = item.unitPrice * assignment.quantity;
           totalCost += cost;
@@ -170,7 +180,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
             cost: cost
           });
 
-          updatedInventory[itemIndex] = { ...item, quantity: item.quantity - assignment.quantity };
+          updatedInventory[itemIndex] = { ...item, quantity: Math.max(0, item.quantity - assignment.quantity) };
           if (updatedInventory[itemIndex].quantity === 0) {
             updatedInventory[itemIndex].isUsed = true;
           }
@@ -180,9 +190,11 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
     }
 
     const recipe = recipes.find(r => r.id === planForm.recipeId);
+    let mealLogId: string | undefined;
     if (recipe && ingredientsUsed.length > 0 && onAddMealLog) {
+      mealLogId = crypto.randomUUID();
       onAddMealLog({
-        id: crypto.randomUUID(),
+        id: mealLogId,
         recipeId: recipe.id,
         recipeName: recipe.name,
         date: planForm.date,
@@ -196,11 +208,36 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
       id: crypto.randomUUID(),
       date: planForm.date,
       recipeId: planForm.recipeId,
+      mealLogId,
+      servings: planForm.servings,
       assignedItems: assignedItemsForPlan,
     });
 
     setIsPlanModalOpen(false);
-    setPlanForm({ recipeId: '', date: format(new Date(), 'yyyy-MM-dd'), assignedItems: [] });
+    setPlanForm({ recipeId: '', date: format(new Date(), 'yyyy-MM-dd'), servings: 1, assignedItems: [] });
+  };
+
+  const handleSaveLog = () => {
+    if (!logForm.recipeName || !logForm.date) {
+      if (onShowToast) onShowToast('Please fill in name and date', 'error');
+      else alert('Please fill in name and date');
+      return;
+    }
+
+    if (editingLog && onUpdateMealLog) {
+      onUpdateMealLog({ ...editingLog, ...logForm } as MealLog);
+    } else if (!editingLog && onAddMealLog) {
+      onAddMealLog({
+        id: crypto.randomUUID(),
+        recipeName: logForm.recipeName,
+        date: logForm.date,
+        cost: logForm.cost || 0,
+        ingredients: logForm.ingredients || []
+      });
+    }
+    setIsLogModalOpen(false);
+    setEditingLog(null);
+    setLogForm({ ingredients: [] });
   };
 
   const handleDeletePlan = (plan: MealPlan) => {
@@ -218,6 +255,9 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
     });
     onUpdateInventory(updatedInventory);
     onDeleteMealPlan(plan.id);
+    if (plan.mealLogId && onDeleteMealLog) {
+      onDeleteMealLog(plan.mealLogId);
+    }
   };
 
   return (
@@ -233,7 +273,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
               activeTab === 'plan' ? "bg-white text-[#38BDF8] shadow-sm scale-100" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 scale-95"
             )}
           >
-            <Calendar size={18} /> Meal Plan
+            <Calendar size={18} /> Plan
           </button>
           <button
             onClick={() => setActiveTab('recipes')}
@@ -243,6 +283,15 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
             )}
           >
             <BookOpen size={18} /> Recipes
+          </button>
+          <button
+            onClick={() => setActiveTab('logs')}
+            className={clsx(
+              "flex-1 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2",
+              activeTab === 'logs' ? "bg-white text-indigo-500 shadow-sm scale-100" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 scale-95"
+            )}
+          >
+            <FileText size={18} /> Logs
           </button>
         </div>
       </div>
@@ -363,11 +412,29 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                             <div key={plan.id} className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 group">
                               <div>
                                 <h4 className="font-bold text-slate-800 text-lg">{recipe?.name || 'Unknown Recipe'}</h4>
-                                {plan.assignedItems.length > 0 && (
-                                  <p className="text-xs font-bold text-[#4ADE80] mt-1.5 flex items-center gap-1.5 bg-[#4ADE80]/10 inline-flex px-2 py-1 rounded-lg">
-                                    <CheckCircle2 size={14} /> {plan.assignedItems.length} ingredients ready
-                                  </p>
-                                )}
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                  {plan.assignedItems.length > 0 && (
+                                    <span className="text-xs font-bold text-[#4ADE80] flex items-center gap-1.5 bg-[#4ADE80]/10 px-2 py-1 rounded-lg">
+                                      <CheckCircle2 size={14} /> {plan.assignedItems.length} ingredients ready
+                                    </span>
+                                  )}
+                                  {plan.servings && plan.servings > 1 && (
+                                    <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
+                                      {plan.servings} servings
+                                    </span>
+                                  )}
+                                  {(() => {
+                                    const log = plan.mealLogId ? mealLogs.find(l => l.id === plan.mealLogId) : mealLogs.find(l => l.recipeId === plan.recipeId && l.date === plan.date);
+                                    if (log) {
+                                      return (
+                                        <span className="text-xs font-bold text-slate-600 bg-slate-200/50 px-2 py-1 rounded-lg">
+                                          Cost: RM{log.cost.toFixed(2)}
+                                        </span>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
                               </div>
                               <button onClick={() => handleDeletePlan(plan)} className="w-8 h-8 flex items-center justify-center text-slate-300 bg-white rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors shadow-sm">
                                 <Trash2 size={16} />
@@ -381,6 +448,68 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                 </div>
               );
             })}
+          </div>
+        )}
+        {activeTab === 'logs' && (
+          <div className="space-y-6 animate-spring-slide-right">
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setEditingLog(null);
+                  setLogForm({
+                    recipeName: '',
+                    date: format(new Date(), 'yyyy-MM-dd'),
+                    cost: 0,
+                    ingredients: []
+                  });
+                  setIsCalendarOpen(false);
+                  setIsLogModalOpen(true);
+                }}
+                className="bg-white text-[#38BDF8] border border-[#38BDF8]/30 hover:bg-[#38BDF8]/5 font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2"
+              >
+                <Plus size={18} /> Add Manual Log
+              </button>
+            </div>
+            {mealLogs.length === 0 ? (
+              <div className="text-center py-16 text-slate-400 bg-white/50 rounded-3xl border border-slate-200 border-dashed">
+                <FileText size={48} className="mx-auto mb-4 text-slate-300" />
+                <p className="font-medium text-lg text-slate-500">No meal logs found.</p>
+                <p className="text-sm mt-1">Plan and save meals to see your logs here!</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {mealLogs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(log => (
+                  <div key={log.id} className="bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 group transition-transform duration-200 hover:scale-[1.01]">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="font-bold text-slate-800 text-xl leading-tight">{log.recipeName}</h3>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-xl inline-block">{format(parseISO(log.date), 'MMM d, yyyy')}</span>
+                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-xl inline-block">RM{log.cost.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setEditingLog(log); setLogForm(log); setIsCalendarOpen(false); setIsLogModalOpen(true); }} className="w-8 h-8 flex items-center justify-center text-slate-400 bg-slate-50 rounded-full hover:bg-blue-50 hover:text-blue-500 transition-colors"><Edit2 size={16} /></button>
+                        <button onClick={() => onDeleteMealLog && onDeleteMealLog(log.id)} className="w-8 h-8 flex items-center justify-center text-slate-400 bg-slate-50 rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
+                      </div>
+                    </div>
+                    {log.ingredients && log.ingredients.length > 0 && (
+                      <div className="bg-slate-50 p-3 rounded-2xl">
+                        <span className="text-xs font-bold text-slate-700 mb-1 block">Ingredients Used:</span>
+                        <div className="space-y-1">
+                          {log.ingredients.map((ing, idx) => (
+                            <div key={idx} className="flex justify-between text-sm text-slate-600">
+                              <span>{ing.quantity} {ing.unit} {ing.name}</span>
+                              <span className="font-medium">RM{ing.cost.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -565,39 +694,68 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
           </div>
 
           {planForm.recipeId && (
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 mb-3">Assign Inventory Items</h4>
-              <div className="space-y-3">
-                {recipes.find(r => r.id === planForm.recipeId)?.ingredients.map((ing, idx) => {
-                  const assignment = planForm.assignedItems.find(a => a.ingredientIndex === idx);
-                  const activeInventory = inventory.filter(i => !i.isUsed && !i.isWasted);
-                  
-                  return (
-                    <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="font-bold text-slate-800">{ing.name}</span>
-                        <span className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-1 rounded-lg">{ing.quantity} {ing.unit} needed</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <div className="flex-1">
-                          <Select
-                            value={assignment?.inventoryItemId || ''}
-                            onValueChange={(value) => {
-                              const newAssignments = [...planForm.assignedItems];
-                              const aIdx = newAssignments.findIndex(a => a.ingredientIndex === idx);
-                              if (aIdx >= 0) {
-                                newAssignments[aIdx].inventoryItemId = value;
-                                // Auto-fill quantity if an item is selected
-                                if (value) {
-                                  const invItem = inventory.find(i => i.id === value);
-                                  newAssignments[aIdx].quantity = Math.min(ing.quantity, invItem?.quantity || 0);
-                                } else {
-                                  newAssignments[aIdx].quantity = 0;
+            <>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Servings Multiplier</label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={planForm.servings || 1}
+                  onChange={(e) => {
+                    const newServings = parseFloat(e.target.value) || 1;
+                    const recipe = recipes.find(r => r.id === planForm.recipeId);
+                    if (recipe) {
+                      const newAssignments = planForm.assignedItems.map(a => {
+                        const ing = recipe.ingredients[a.ingredientIndex];
+                        const invItem = inventory.find(i => i.id === a.inventoryItemId);
+                        const requiredQty = ing.quantity * newServings;
+                        return {
+                          ...a,
+                          quantity: a.inventoryItemId ? requiredQty : 0
+                        };
+                      });
+                      setPlanForm({ ...planForm, servings: newServings, assignedItems: newAssignments });
+                    } else {
+                      setPlanForm({ ...planForm, servings: newServings });
+                    }
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
+                />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 mb-3">Assign Inventory Items</h4>
+                <div className="space-y-3">
+                  {recipes.find(r => r.id === planForm.recipeId)?.ingredients.map((ing, idx) => {
+                    const assignment = planForm.assignedItems.find(a => a.ingredientIndex === idx);
+                    const activeInventory = inventory.filter(i => !i.isWasted);
+                    const requiredQty = ing.quantity * (planForm.servings || 1);
+                    
+                    return (
+                      <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="font-bold text-slate-800">{ing.name}</span>
+                          <span className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-1 rounded-lg">{requiredQty} {ing.unit} needed</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <Select
+                              value={assignment?.inventoryItemId || ''}
+                              onValueChange={(value) => {
+                                const newAssignments = [...planForm.assignedItems];
+                                const aIdx = newAssignments.findIndex(a => a.ingredientIndex === idx);
+                                if (aIdx >= 0) {
+                                  newAssignments[aIdx].inventoryItemId = value;
+                                  // Auto-fill quantity if an item is selected
+                                  if (value) {
+                                    newAssignments[aIdx].quantity = requiredQty;
+                                  } else {
+                                    newAssignments[aIdx].quantity = 0;
+                                  }
                                 }
-                              }
-                              setPlanForm({ ...planForm, assignedItems: newAssignments });
-                            }}
-                          >
+                                setPlanForm({ ...planForm, assignedItems: newAssignments });
+                              }}
+                            >
                             <SelectTrigger className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#4ADE80] font-medium h-auto">
                               <SelectValue placeholder="-- Select Inventory --" />
                             </SelectTrigger>
@@ -630,8 +788,8 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                         )}
                       </div>
                       {assignment?.inventoryItemId && assignment.quantity > (inventory.find(i => i.id === assignment.inventoryItemId)?.quantity || 0) && (
-                        <p className="text-xs font-bold text-rose-500 mt-2 flex items-center gap-1 bg-rose-50 p-2 rounded-lg">
-                          <AlertCircle size={14} /> Exceeds available stock!
+                        <p className="text-xs font-bold text-amber-500 mt-2 flex items-center gap-1 bg-amber-50 p-2 rounded-lg">
+                          <AlertCircle size={14} /> Exceeds stock, but will be logged.
                         </p>
                       )}
                     </div>
@@ -639,7 +797,8 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                 })}
               </div>
             </div>
-          )}
+          </>
+        )}
           
           <button
             onClick={handleSaveMealPlan}
@@ -647,6 +806,155 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
             className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
           >
             Save to Plan
+          </button>
+        </div>
+      </Sheet>
+      {/* Log Sheet */}
+      <Sheet
+        isOpen={isLogModalOpen}
+        onClose={() => setIsLogModalOpen(false)}
+        title={editingLog ? "Edit Meal Log 📝" : "Add Meal Log 📝"}
+      >
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Meal Name</label>
+            <input
+              type="text"
+              value={logForm.recipeName || ''}
+              onChange={(e) => setLogForm({ ...logForm, recipeName: e.target.value })}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
+              placeholder="e.g. Chicken Rice, Takeout..."
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Date</label>
+            <button
+              onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 flex items-center justify-between hover:border-[#38BDF8] transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <Calendar className="text-[#38BDF8]" size={20} />
+                <span className="font-medium text-slate-800">
+                  {logForm.date ? format(parseISO(logForm.date), 'MMMM d, yyyy') : 'Select Date'}
+                </span>
+              </div>
+              <div className={clsx("transition-transform duration-300", isCalendarOpen ? "rotate-180" : "rotate-0")}>
+                <Plus size={18} className="text-slate-400 group-hover:text-[#38BDF8]" />
+              </div>
+            </button>
+            
+            {isCalendarOpen && (
+              <div className="mt-3 bg-white border border-slate-100 rounded-3xl p-4 shadow-xl animate-spring-up overflow-hidden">
+                <CalendarComponent
+                  onChange={(value) => {
+                    if (value instanceof Date) {
+                      setLogForm({ ...logForm, date: format(value, 'yyyy-MM-dd') });
+                      setIsCalendarOpen(false);
+                    }
+                  }}
+                  value={logForm.date ? parseISO(logForm.date) : new Date()}
+                  className="!w-full !border-none !bg-transparent font-sans"
+                />
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Total Cost (RM)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={logForm.cost || 0}
+              onChange={(e) => setLogForm({ ...logForm, cost: parseFloat(e.target.value) || 0 })}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
+            />
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <label className="block text-sm font-bold text-slate-700">Ingredients</label>
+              <button 
+                onClick={() => setLogForm({ ...logForm, ingredients: [...(logForm.ingredients || []), { name: '', quantity: 1, unit: 'pcs', cost: 0 }] })}
+                className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-3 py-1.5 rounded-xl hover:bg-[#38BDF8]/20 transition-colors flex items-center gap-1"
+              >
+                <Plus size={14} /> Add Item
+              </button>
+            </div>
+            <div className="space-y-3">
+              {logForm.ingredients && logForm.ingredients.length > 0 && (
+                <div className="grid grid-cols-[1fr_55px_55px_65px_32px] gap-2 px-2 mb-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Name</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase text-center">Qty</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase text-center">Unit</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase text-center">Cost</span>
+                  <span></span>
+                </div>
+              )}
+              {logForm.ingredients?.map((ing, idx) => (
+                <div key={idx} className="grid grid-cols-[1fr_55px_55px_65px_32px] gap-2 items-center bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                  <input
+                    type="text"
+                    value={ing.name}
+                    onChange={(e) => {
+                      const newIngs = [...(logForm.ingredients || [])];
+                      newIngs[idx].name = e.target.value;
+                      setLogForm({ ...logForm, ingredients: newIngs });
+                    }}
+                    placeholder="Name"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-xs focus:border-[#4ADE80] outline-none font-medium"
+                  />
+                  <input
+                    type="number"
+                    value={ing.quantity}
+                    onChange={(e) => {
+                      const newIngs = [...(logForm.ingredients || [])];
+                      newIngs[idx].quantity = parseFloat(e.target.value) || 0;
+                      setLogForm({ ...logForm, ingredients: newIngs });
+                    }}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-1 py-2.5 text-xs focus:border-[#4ADE80] outline-none font-medium text-center"
+                  />
+                  <input
+                    type="text"
+                    value={ing.unit}
+                    onChange={(e) => {
+                      const newIngs = [...(logForm.ingredients || [])];
+                      newIngs[idx].unit = e.target.value;
+                      setLogForm({ ...logForm, ingredients: newIngs });
+                    }}
+                    placeholder="Unit"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-1 py-2.5 text-xs focus:border-[#4ADE80] outline-none font-medium text-center"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={ing.cost}
+                    onChange={(e) => {
+                      const newIngs = [...(logForm.ingredients || [])];
+                      newIngs[idx].cost = parseFloat(e.target.value) || 0;
+                      setLogForm({ ...logForm, ingredients: newIngs });
+                    }}
+                    placeholder="Cost"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-1 py-2.5 text-xs focus:border-[#4ADE80] outline-none font-medium text-center"
+                  />
+                  <button 
+                    onClick={() => {
+                      const newIngs = [...(logForm.ingredients || [])];
+                      newIngs.splice(idx, 1);
+                      setLogForm({ ...logForm, ingredients: newIngs });
+                    }}
+                    className="w-8 h-8 flex items-center justify-center text-slate-400 bg-white rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors shadow-sm"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button
+            onClick={handleSaveLog}
+            className="w-full bg-gradient-to-r from-[#4ADE80] to-[#38BDF8] text-white font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-95 text-lg"
+          >
+            Save Log
           </button>
         </div>
       </Sheet>

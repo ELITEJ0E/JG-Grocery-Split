@@ -1,4 +1,10 @@
-export type Category = 'produce' | 'dairy' | 'meat' | 'pantry' | 'frozen' | 'bakery' | 'other';
+export type Category = string;
+
+export interface CustomCategory {
+  name: string;
+  emoji: string;
+  color: string;
+}
 
 export interface InventoryItem {
   id: string;
@@ -72,6 +78,8 @@ export interface MealPlan {
   id: string;
   date: string; // YYYY-MM-DD
   recipeId: string;
+  mealLogId?: string;
+  servings?: number;
   assignedItems: {
     inventoryItemId: string;
     quantity: number;
@@ -80,7 +88,7 @@ export interface MealPlan {
 
 export interface MealLog {
   id: string;
-  recipeId: string;
+  recipeId?: string;
   recipeName: string;
   date: string; // YYYY-MM-DD
   cost: number;

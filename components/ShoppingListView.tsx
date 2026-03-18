@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { InventoryItem, Recipe, MealPlan, ShoppingListItem, Category } from '../types';
+import { InventoryItem, Recipe, MealPlan, ShoppingListItem, Category, CustomCategory } from '../types';
 import { ToastType } from './ui/Toast';
 import { Plus, Search, Trash2, CheckCircle2, Circle, AlertCircle, ChevronDown, PackagePlus, Camera, Check, FileText, Copy, ClipboardPaste } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -15,24 +15,27 @@ interface ShoppingListViewProps {
   recipes: Recipe[];
   mealPlans: MealPlan[];
   shoppingList: ShoppingListItem[];
+  customCategories?: CustomCategory[];
   onUpdateShoppingList: (list: ShoppingListItem[]) => void;
   onAddToInventory: (item: Partial<InventoryItem>) => void;
   onNavigateToScan: () => void;
   onShowToast?: (message: string, type?: ToastType) => void;
 }
 
-const CATEGORIES: Category[] = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other'];
+const DEFAULT_CATEGORIES: Category[] = ['produce', 'dairy', 'meat', 'pantry', 'frozen', 'bakery', 'other'];
 
 const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   inventory,
   recipes,
   mealPlans,
   shoppingList,
+  customCategories = [],
   onUpdateShoppingList,
   onAddToInventory,
   onNavigateToScan,
   onShowToast
 }) => {
+  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories.map(c => c.name)];
   const [searchQuery, setSearchQuery] = useState('');
   const [newItemName, setNewItemName] = useState('');
   const [newItemCategory, setNewItemCategory] = useState<Category>('other');
@@ -308,8 +311,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CATEGORIES.map(cat => (
-                          <SelectItem key={cat} value={cat} className="capitalize">{getCategoryEmoji(cat)} {cat}</SelectItem>
+                        {allCategories.map(cat => (
+                          <SelectItem key={cat} value={cat} className="capitalize">{getCategoryEmoji(cat, customCategories)} {cat}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -335,7 +338,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   key={idx} 
                   className="flex-shrink-0 w-48 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/50 p-4 rounded-3xl snap-start shadow-sm transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <div className="text-2xl mb-2">{getCategoryEmoji(sug.category)}</div>
+                  <div className="text-2xl mb-2">{getCategoryEmoji(sug.category, customCategories)}</div>
                   <p className="font-bold text-slate-800 capitalize truncate text-lg">{sug.name}</p>
                   <p className="text-sm font-medium text-amber-600 mb-3">Need: {sug.quantity}</p>
                   <button 
@@ -360,14 +363,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             </div>
           ) : (
             <div className="space-y-6">
-              {CATEGORIES.map(category => {
+              {allCategories.map(category => {
                 const itemsInCategory = groupedActiveItems[category];
                 if (!itemsInCategory || itemsInCategory.length === 0) return null;
 
                 return (
                   <div key={category} className="bg-white rounded-3xl shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden">
                     <div className="bg-slate-50/80 px-5 py-3 border-b border-slate-100 flex items-center gap-2">
-                      <span className="text-xl">{getCategoryEmoji(category)}</span>
+                      <span className="text-xl">{getCategoryEmoji(category, customCategories)}</span>
                       <h3 className="font-bold text-slate-700 capitalize">{category}</h3>
                     </div>
                     <div className="divide-y divide-slate-50">
