@@ -246,8 +246,10 @@ const RecipesView: React.FC<RecipesViewProps> = ({ recipes, onAddRecipe, onUpdat
                       />
                       <input
                         type="number"
-                        value={ing.quantity}
-                        onChange={e => updateIngredient(i, 'quantity', parseFloat(e.target.value))}
+                        step="any"
+                        min="0"
+                        value={ing.quantity ?? ''}
+                        onChange={e => updateIngredient(i, 'quantity', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                         className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-emerald-500"
                       />
                       <input

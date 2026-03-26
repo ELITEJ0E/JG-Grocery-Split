@@ -97,7 +97,7 @@ const ScanView: React.FC<ScanViewProps> = ({ onItemsExtracted, onCancel }) => {
       name: '',
       quantity: 1,
       unit: 'pcs',
-      unitPrice: 0,
+      unitPrice: undefined,
       category: 'other',
       shelfLifeDays: 7,
       purchaseDate: new Date().toISOString().split('T')[0]

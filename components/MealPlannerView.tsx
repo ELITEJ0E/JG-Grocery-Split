@@ -604,10 +604,13 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                   />
                   <input
                     type="number"
-                    value={ing.quantity}
+                    step="any"
+                    min="0"
+                    value={ing.quantity ?? ''}
                     onChange={(e) => {
                       const newIngs = [...(recipeForm.ingredients || [])];
-                      newIngs[idx].quantity = parseFloat(e.target.value);
+                      const val = e.target.value;
+                      newIngs[idx].quantity = val === '' ? undefined : (parseFloat(val) as any);
                       setRecipeForm({ ...recipeForm, ingredients: newIngs });
                     }}
                     className="w-full bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-sm focus:border-[#4ADE80] outline-none font-medium text-center"
@@ -701,11 +704,12 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                   type="number"
                   min="0.1"
                   step="0.1"
-                  value={planForm.servings || 1}
+                  value={planForm.servings ?? 1}
                   onChange={(e) => {
-                    const newServings = parseFloat(e.target.value) || 1;
+                    const val = e.target.value;
+                    const newServings = val === '' ? undefined : parseFloat(val);
                     const recipe = recipes.find(r => r.id === planForm.recipeId);
-                    if (recipe) {
+                    if (recipe && newServings !== undefined) {
                       const newAssignments = planForm.assignedItems.map(a => {
                         const ing = recipe.ingredients[a.ingredientIndex];
                         const invItem = inventory.find(i => i.id === a.inventoryItemId);
@@ -864,8 +868,8 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
               type="number"
               min="0"
               step="0.01"
-              value={logForm.cost || 0}
-              onChange={(e) => setLogForm({ ...logForm, cost: parseFloat(e.target.value) || 0 })}
+              value={logForm.cost ?? ''}
+              onChange={(e) => setLogForm({ ...logForm, cost: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all font-medium text-slate-800"
             />
           </div>
@@ -873,7 +877,7 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
             <div className="flex justify-between items-center mb-3">
               <label className="block text-sm font-bold text-slate-700">Ingredients</label>
               <button 
-                onClick={() => setLogForm({ ...logForm, ingredients: [...(logForm.ingredients || []), { name: '', quantity: 1, unit: 'pcs', cost: 0 }] })}
+                onClick={() => setLogForm({ ...logForm, ingredients: [...(logForm.ingredients || []), { name: '', quantity: 1, unit: 'pcs', cost: undefined }] })}
                 className="text-xs font-bold text-[#38BDF8] bg-[#38BDF8]/10 px-3 py-1.5 rounded-xl hover:bg-[#38BDF8]/20 transition-colors flex items-center gap-1"
               >
                 <Plus size={14} /> Add Item
@@ -904,10 +908,13 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                   />
                   <input
                     type="number"
-                    value={ing.quantity}
+                    step="any"
+                    min="0"
+                    value={ing.quantity ?? ''}
                     onChange={(e) => {
                       const newIngs = [...(logForm.ingredients || [])];
-                      newIngs[idx].quantity = parseFloat(e.target.value) || 0;
+                      const val = e.target.value;
+                      newIngs[idx].quantity = val === '' ? undefined : (parseFloat(val) as any);
                       setLogForm({ ...logForm, ingredients: newIngs });
                     }}
                     className="w-full bg-white border border-slate-200 rounded-xl px-1 py-2.5 text-xs focus:border-[#4ADE80] outline-none font-medium text-center"
@@ -927,10 +934,11 @@ const MealPlannerView: React.FC<MealPlannerViewProps> = ({
                     type="number"
                     min="0"
                     step="0.01"
-                    value={ing.cost}
+                    value={ing.cost ?? ''}
                     onChange={(e) => {
                       const newIngs = [...(logForm.ingredients || [])];
-                      newIngs[idx].cost = parseFloat(e.target.value) || 0;
+                      const val = e.target.value;
+                      newIngs[idx].cost = val === '' ? undefined : (parseFloat(val) as any);
                       setLogForm({ ...logForm, ingredients: newIngs });
                     }}
                     placeholder="Cost"

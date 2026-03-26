@@ -46,7 +46,7 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const [selectedPriceItem, setSelectedPriceItem] = useState<string>('');
   const [selectedStoreItem, setSelectedStoreItem] = useState<string>('');
   const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [tempBudget, setTempBudget] = useState(budgetData?.monthlyBudget || 800);
+  const [tempBudget, setTempBudget] = useState<number | undefined>(budgetData?.monthlyBudget);
 
   const totalSpent = inventory.reduce((sum, item) => sum + (item.unitPrice * (item.originalQuantity ?? item.quantity)), 0);
   const wastedItems = inventory.filter(item => item.isWasted);
@@ -312,8 +312,10 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <label className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mb-1.5 block">Monthly Limit ({currency.symbol})</label>
                 <input
                   type="number"
-                  value={tempBudget}
-                  onChange={(e) => setTempBudget(parseFloat(e.target.value))}
+                  step="0.01"
+                  min="0"
+                  value={tempBudget ?? ''}
+                  onChange={(e) => setTempBudget(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-black text-slate-800 focus:border-[#38BDF8] focus:ring-4 focus:ring-[#38BDF8]/10 outline-none transition-all"
                 />
               </div>

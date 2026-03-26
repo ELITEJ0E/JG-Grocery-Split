@@ -34,7 +34,7 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
       name: '',
       quantity: 1,
       unit: 'pcs',
-      unitPrice: 0,
+      unitPrice: undefined,
       category: 'other',
       shelfLifeDays: 7,
       purchaseDate: new Date().toISOString().split('T')[0]
@@ -44,14 +44,14 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
   const handleConfirm = () => {
     const finalItems: InventoryItem[] = items.map(item => {
       const purchaseDate = item.purchaseDate || new Date().toISOString();
-      const shelfLife = item.shelfLifeDays || 7;
+      const shelfLife = item.shelfLifeDays ?? 7;
       return {
         id: crypto.randomUUID(),
         name: item.name || 'Unknown',
-        quantity: item.quantity || 1,
-        originalQuantity: item.quantity || 1,
+        quantity: item.quantity ?? 1,
+        originalQuantity: item.quantity ?? 1,
         unit: item.unit || 'pcs',
-        unitPrice: item.unitPrice || 0,
+        unitPrice: item.unitPrice ?? 0,
         category: (item.category as Category) || 'other',
         purchaseDate,
         expiryDate: addDays(new Date(purchaseDate), shelfLife).toISOString(),
@@ -128,8 +128,10 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      value={item.quantity || ''}
-                      onChange={(e) => handleUpdate(index, 'quantity', parseFloat(e.target.value))}
+                      step="any"
+                      min="0"
+                      value={item.quantity ?? ''}
+                      onChange={(e) => handleUpdate(index, 'quantity', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                       className="w-16 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all"
                     />
                     <input
@@ -147,8 +149,10 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">{currency.symbol}</span>
                     <input
                       type="number"
-                      value={item.unitPrice || ''}
-                      onChange={(e) => handleUpdate(index, 'unitPrice', parseFloat(e.target.value))}
+                      step="0.01"
+                      min="0"
+                      value={item.unitPrice ?? ''}
+                      onChange={(e) => handleUpdate(index, 'unitPrice', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                       className={`w-full bg-slate-50 border border-slate-200 rounded-xl ${getCurrencyPadding()} pr-3 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all`}
                       style={{ paddingLeft: currency.symbol.length === 1 ? '2rem' : '2.5rem' }}
                     />
@@ -182,8 +186,8 @@ const VerificationView: React.FC<VerificationViewProps> = ({ items: initialItems
                   <label className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mb-1.5 block">Shelf Life (Days)</label>
                   <input
                     type="number"
-                    value={item.shelfLifeDays || ''}
-                    onChange={(e) => handleUpdate(index, 'shelfLifeDays', parseInt(e.target.value))}
+                    value={item.shelfLifeDays ?? ''}
+                    onChange={(e) => handleUpdate(index, 'shelfLifeDays', e.target.value === '' ? undefined : parseInt(e.target.value))}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-[#4ADE80] focus:ring-4 focus:ring-[#4ADE80]/10 outline-none transition-all"
                   />
                 </div>
