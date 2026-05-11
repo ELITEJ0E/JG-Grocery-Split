@@ -15,13 +15,36 @@ import { addDays, format, differenceInDays } from 'date-fns';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppState>('kitchen');
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
-  const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
-  const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
-  const [scannedItems, setScannedItems] = useState<Partial<InventoryItem>[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
+
+  // Handle browser history for mobile back button
+  useEffect(() => {
+    // Initial state
+    window.history.replaceState({ view: 'kitchen', isVerifying: false }, '');
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state) {
+        setView(event.state.view);
+        setIsVerifying(event.state.isVerifying);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (newView: AppState) => {
+    if (view === newView && !isVerifying) return;
+    setView(newView);
+    setIsVerifying(false);
+    window.history.pushState({ view: newView, isVerifying: false }, '');
+  };
+
+  const setVerifyingState = (verifying: boolean) => {
+    if (isVerifying === verifying) return;
+    setIsVerifying(verifying);
+    window.history.pushState({ view: view, isVerifying: verifying }, '');
+  };
   const [currency, setCurrency] = useState<Currency>(CURRENCIES[0]);
   const [customCategories, setCustomCategories] = useState<{name: string, emoji: string}[]>([]);
 
@@ -35,7 +58,12 @@ const App: React.FC = () => {
     setToast({ message, type, isVisible: true });
   };
 
-  const [priceHistory, setPriceHistory] = useState<Record<string, PriceHistoryEntry[]>>({});
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
+  const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
+  const [scannedItems, setScannedItems] = useState<Partial<InventoryItem>[]>([]);
   const [budgetData, setBudgetData] = useState<BudgetData>({ monthlyBudget: 800, months: {} });
   const [lifespanData, setLifespanData] = useState<LifespanData>({});
 
@@ -62,6 +90,8 @@ const App: React.FC = () => {
     if (storedCurrency) setCurrency(JSON.parse(storedCurrency));
     if (storedCustomCategories) setCustomCategories(JSON.parse(storedCustomCategories));
   }, []);
+
+  const [priceHistory, setPriceHistory] = useState<Record<string, PriceHistoryEntry[]>>({});
 
   useEffect(() => {
     localStorage.setItem('grocery_inventory', JSON.stringify(inventory));
@@ -131,7 +161,7 @@ const App: React.FC = () => {
 
   const handleItemsExtracted = (items: Partial<InventoryItem>[]) => {
     setScannedItems(items);
-    setIsVerifying(true);
+    setVerifyingState(true);
   };
 
   const handleConfirmItems = (items: InventoryItem[]) => {
@@ -174,6 +204,8 @@ const App: React.FC = () => {
     });
 
     setIsVerifying(false);
+    // When confirming, we replace the state instead of pushing to prevent loop on back
+    window.history.replaceState({ view: 'kitchen', isVerifying: false }, '');
     setScannedItems([]);
     setView('kitchen');
   };
@@ -204,9 +236,8 @@ const App: React.FC = () => {
           customCategories={customCategories}
           onConfirm={handleConfirmItems}
           onCancel={() => {
-            setIsVerifying(false);
             setScannedItems([]);
-            setView('scan');
+            navigateTo('scan');
           }}
         />
       );
@@ -222,7 +253,7 @@ const App: React.FC = () => {
             customCategories={customCategories}
             onUpdateItem={handleUpdateItem}
             onDeleteItem={handleDeleteItem}
-            onNavigate={setView}
+            onNavigate={navigateTo}
           />
         );
       case 'inventory':
@@ -249,7 +280,7 @@ const App: React.FC = () => {
           />
         );
       case 'scan':
-        return <ScanView onItemsExtracted={handleItemsExtracted} onCancel={() => setView('kitchen')} />;
+        return <ScanView onItemsExtracted={handleItemsExtracted} onCancel={() => navigateTo('kitchen')} />;
       case 'analytics':
         return (
           <AnalyticsView 
@@ -281,7 +312,7 @@ const App: React.FC = () => {
             customCategories={customCategories}
             onUpdateShoppingList={setShoppingList}
             onAddToInventory={handleQuickAddInventory}
-            onNavigateToScan={() => setView('scan')}
+            onNavigateToScan={() => navigateTo('scan')}
             onShowToast={showToast}
           />
         );
@@ -294,7 +325,7 @@ const App: React.FC = () => {
             customCategories={customCategories}
             onUpdateItem={handleUpdateItem}
             onDeleteItem={handleDeleteItem}
-            onNavigate={setView}
+            onNavigate={navigateTo}
           />
         );
     }
@@ -313,7 +344,7 @@ const App: React.FC = () => {
         onClose={() => setToast(prev => ({ ...prev, isVisible: false }))} 
       />
       {!isVerifying && <InstallPrompt />}
-      {!isVerifying && <BottomNav currentView={view} onNavigate={setView} />}
+      {!isVerifying && <BottomNav currentView={view} onNavigate={navigateTo} />}
     </div>
   );
 };
